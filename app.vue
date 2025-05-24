@@ -22,19 +22,18 @@
       <!-- Ability Chooser -->
       <div v-if="interfaceState.mode === 'Choosing Ability'">
         <div v-for="ability of interfaceState.card.abilities" :key="ability.name" class="border border-black" 
-        :class="canUseAbility({gameState, thisCard: interfaceState.card, thisAbility: ability}) ? 'bg-red-200' : 'bg-slate-200'"
-        @click="abilityClickHandler(ability)">
+        :class="canUseAbility({gameState, thisCard: interfaceState.card, thisAbility: ability}) ? 'bg-white' : 'bg-slate-200'" @click="abilityClickHandler(ability)">
           <p class="font-bold">{{ ability.name }}</p>
           <ElementalIcons :energy-pool="ability.energyCost"/>
           <p>{{ ability.description }}</p>
         </div>
-        <div @click="cancelAbility" class="bg-red-100 border border-black">
+        <div @click="cancelAbility" class="bg-red-200 border border-black">
           Cancel
         </div>
       </div>
 
       <!-- Selection Chooser -->
-      <div v-if="interfaceState.mode === 'Choosing Selections'" class="bg-blue-200">
+      <div v-if="interfaceState.mode === 'Choosing Selections'" class="border border-black">
           
       </div>
      </div>
