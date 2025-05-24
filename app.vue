@@ -13,6 +13,11 @@
       </template>
     </section>
 
+    <!-- Energy -->
+    <div class="absolute bottom-0 right-0">
+      <ElementalIcons :energy-pool="gameState.energyPool"/>
+    </div>
+
     <div class="w-128 absolute top-0 right-0">
       <!-- Ability Chooser -->
       <div v-if="interfaceState.mode === 'Choosing Ability'">
@@ -20,6 +25,7 @@
         :class="canUseAbility({gameState, thisCard: interfaceState.card, thisAbility: ability}) ? 'bg-red-200' : 'bg-slate-200'"
         @click="abilityClickHandler(ability)">
           <p class="font-bold">{{ ability.name }}</p>
+          <ElementalIcons :energy-pool="ability.energyCost"/>
           <p>{{ ability.description }}</p>
         </div>
         <div @click="cancelAbility" class="bg-red-100 border border-black">
@@ -43,16 +49,18 @@
     name: "Simple Summon",
     description: "Moves from hand to field",
     limit: 1,
-    //i think these can be composable/chainable functions!!!
-    stateCheck: (ctx: AbilityUsageContext) => {return (getZoneOfCard(ctx.gameState, ctx.thisCard.id) === "Hand")},
-    effect: (ctx: AbilityUsageContext, _) => {return moveCardToZone(ctx.gameState, ctx.thisCard.id, "Field")}
+    energyCost: {},
+    fromZone: "Hand",
+    toZone: "Field"
   }
 
   const testCard: CardDefinition = {
     collectionNumber: -1,
     name: "Test Card",
     elements: ["Holy", "Wind"],
-    abilities: [simpleSummon]
+    abilities: [simpleSummon],
+    power: 100,
+    maxPower: "Unlimited"
   }
   const testDrawer: CardDefinition = {
     collectionNumber: -2,
@@ -62,9 +70,12 @@
       name: "Draw",
       description: "Draw 1 card",
       limit: 1,
-      stateCheck: (ctx: AbilityUsageContext) => {return (getZoneOfCard(ctx.gameState, ctx.thisCard.id) === "Field")},
+      energyCost: {"Holy": 1},
+      fromZone: "Field",
       effect: (ctx: AbilityUsageContext, _) => {return drawCard(ctx.gameState)}
-    }]
+    }],
+    power: 50,
+    maxPower: 250
   }
   const testMutator: CardDefinition = {
     collectionNumber: -3,
@@ -74,9 +85,12 @@
       name: "Turn Evil",
       description: "Becomes Dark type (from hand)",
       limit: 1,
-      stateCheck: (ctx: AbilityUsageContext) => {return (getZoneOfCard(ctx.gameState, ctx.thisCard.id) === "Hand")},
+      energyCost: {"Dark": 1},
+      fromZone: "Hand",
       effect: (ctx: AbilityUsageContext, _) => {return mutateCard(ctx.gameState, ctx.thisCard.id, {elements: ["Dark"]})}
-    }]
+    }],
+    power: 200,
+    maxPower: 500
   }
 
   const decklist = [
@@ -93,6 +107,13 @@
   ]
 
   const gameState: Ref<GameState> = ref(initGameState(decklist))
+  //cheat in some energy
+  gameState.value.energyPool = {
+    ...gameState.value.energyPool,
+    "Holy": 3,
+    "Plant": 1,
+    "Dark": 2
+  }
 
   type InterfaceState = {
     mode: "Standby"

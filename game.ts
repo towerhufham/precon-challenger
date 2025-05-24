@@ -1,12 +1,13 @@
 // --------------- Imports --------------- //
 
 import { inPlaceShuffle } from "./utils"
-import { reactive } from "vue"
 
 // --------------- Game Constants --------------- //
 
 export const ALL_ELEMENTS = ["Holy", "Fire", "Stone", "Thunder", "Plant", "Wind", "Water", "Dark"] as const
 export type Elemental = typeof ALL_ELEMENTS[number]
+
+export type EnergyPool = {[key in Elemental]: number}
 
 export const ALL_ZONES = ["Deck", "Hand", "Field", "GY", "Removed"] as const
 export type Zone = typeof ALL_ZONES[number]
@@ -18,6 +19,8 @@ export type CardDefinition = {
   name: string
   elements: Elemental[]
   abilities: Ability[]
+  power: number
+  maxPower: number | "Unlimited"
 }
 
 export type CardInstance = CardDefinition & {
@@ -35,6 +38,20 @@ export type GameState = {
   Field: CardInstance[]
   GY: CardInstance[]
   Removed: CardInstance[]
+  energyPool: EnergyPool
+}
+
+const makeEmptyEnergyPool = (): EnergyPool => {
+  return {
+    "Holy": 0,
+    "Fire": 0,
+    "Stone": 0,
+    "Thunder": 0,
+    "Plant": 0,
+    "Wind": 0,
+    "Water": 0,
+    "Dark": 0
+  }
 }
 
 export const initGameState = (decklist: CardDefinition[]): GameState => {
@@ -48,14 +65,15 @@ export const initGameState = (decklist: CardDefinition[]): GameState => {
   //shuffle deck
   inPlaceShuffle(Deck)
   //starting state
-  const gs = {
+  const gs: GameState = {
     moves: 0,
     nextId,
     Deck,
     Hand: [],
     Field: [],
     GY: [],
-    Removed: []
+    Removed: [],
+    energyPool: makeEmptyEnergyPool(),
   }
   //silly way of drawing starting hand lol
   return drawCard(drawCard(drawCard(drawCard(drawCard(gs)))))
@@ -130,10 +148,13 @@ export const mutateCard = (gs: GameState, id: number, mutations: Partial<CardIns
 export type Ability = {
   name: string
   description: string
+  energyCost: Partial<EnergyPool>
   limit: number | "Unlimited"
+  fromZone: Zone | "Any"
+  toZone?: Zone
   selections?: SelectionCriteria[] | ((ctx: AbilityUsageContext) => SelectionCriteria[])
   stateCheck?: (ctx: AbilityUsageContext) => boolean
-  effect: (ctx: AbilityUsageContext, selections: Selections) => GameState
+  effect?: (ctx: AbilityUsageContext, selections: Selections) => GameState
 }
 
 export type AbilityUsageContext = {
@@ -162,24 +183,55 @@ export type AbilitySelections = {
   elements?: Elemental[]
 }
 
+export const canSpendEnergy = (pool: EnergyPool, cost: Partial<EnergyPool>): boolean => {
+  for (const el of Object.keys(cost) as Array<Elemental>) {
+    //if it's less than what's required, it can't be paid
+    if (pool[el] < cost[el]!) return false
+  }
+  //if we make it here, it's payable
+  return true
+}
+
+export const spendEnergy = (pool: EnergyPool, cost: Partial<EnergyPool>): EnergyPool => {
+  //if we don't have enough, error
+  if (!canSpendEnergy(pool, cost)) throw new Error(`GAME ERROR: Trying to spend ${JSON.stringify(cost)} but pool only has ${JSON.stringify(pool)}!`)
+  //kinda dumb
+  let newPool = {...pool}
+  for (const el of Object.keys(cost) as Array<Elemental>) {
+    newPool[el] -= cost[el]!
+  }
+  return newPool
+}
+
 export const canUseAbility = (ctx: AbilityUsageContext): boolean => {
   //first check usage limits
   const ability = ctx.thisAbility
   if (ability.limit !== "Unlimited") {
     if (ctx.thisCard.abilityUsages[ability.name] >= ability.limit) return false
   }
+  //check if it's in the right zone
+  if (ability.fromZone !== "Any") {
+    if (ability.fromZone !== getZoneOfCard(ctx.gameState, ctx.thisCard.id)) return false
+  }
   //now do state check
   if (typeof ability.stateCheck === "function") {
     return ability.stateCheck(ctx)
   }
+  //now check for energy in pool
+  if (!canSpendEnergy(ctx.gameState.energyPool, ctx.thisAbility.energyCost)) return false
   //todo: maybe preliminary selection checks, to ensure we can meet the minimum amount
   return true
 }
 
 export const applyEffect = (ctx: AbilityUsageContext): GameState => {
-  //todo: this function feels a bit gunky
-  const stateWithEffect = ctx.thisAbility.effect(ctx, {})
-  const stateWithMove = {...stateWithEffect, moves: ctx.gameState.moves + 1}
+  //todo: this function feels very gunky, i miss clojure arrow operators...
+  const stateWithEffect = (ctx.thisAbility.effect) ? ctx.thisAbility.effect(ctx, {}) : ctx.gameState
+  const stateWithMovedCard = (ctx.thisAbility.toZone) ? moveCardToZone(stateWithEffect, ctx.thisCard.id, ctx.thisAbility.toZone) : stateWithEffect
+  const stateWithEnergyUpdated = {
+    ...stateWithMovedCard,
+    energyPool: spendEnergy(stateWithEffect.energyPool, ctx.thisAbility.energyCost)
+  }
+  const stateWithMove = {...stateWithEnergyUpdated, moves: ctx.gameState.moves + 1}
   //we need to re-get the card instance because it may have been updated by the effect
   const card = getCardById(stateWithMove, ctx.thisCard.id) 
   const newUsages = card.abilityUsages[ctx.thisAbility.name] + 1
