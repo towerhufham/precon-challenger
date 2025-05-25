@@ -1,8 +1,41 @@
+<!-- Card Component -->
 <template>
-  <article class="w-32 h-48 flex flex-col justify-between items-center border-2 border-black rounded-sm" :style="getElementalBackground(card.elements)">
-    <p class="font-bold pb-2">{{ card.name }}</p>
-    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAADSklEQVR4Xu2XsYoqQRBFe0ERA0UUMRETAxMDwf//AwUDEwNBxEQEERTEQPZRAzP0a3ZW2Lt3qOe7Rrtq1dScM7e7/VgsFp9BLzcEPiTEjYtsEAnx5UNCnPmQEAnxRsDZPNpDJMQZAWfjKCES4oyAs3GUEAlxRsDZOEqIhDgj4GwcJURCnBFwNo4SIiHOCDgbRwmREGcEnI2jhEiIMwLOxlFCJMQZAWfjKCES4oyAs3GUEAlxRsDZOEqIhDgj4GwcJURCnBFwNo4SIiHOCDgbRwmREGcEnI2jhEiIMwLOxlFCJMQZAWfjKCES4oyAs3GUEAlxRsDZOJUmZDqdhvv9HrbbbYHB3ms0Gtn/9v7lcik+m8/n2d/P5zOsVisY3WAwCMPhMCyXy796lV0n/759+Xa7hc1mA8/wqkFlQnLwBjwXMh6PQ7PZDOv1OoxGo9DtdgvwsbzJZJLdBwIkhhsL+e46JupwOITj8Rhms1k4n89hv9+/Ygp9XokQuzET0Wq1wvV6LYSkN5kDeDwewWTliSl7stPEfZVAo2O9Op1OOJ1Ood/vFwmx98qukz4g8cMDEX9RXImQfAYTEAuJn0D7Ti7IhMRLSwouvier2e12od1uZ2n7LkUGORaSio6v0+v1ivTa9VJBLCn/vBCDaPJsH0r3hhSahCREGAmxS5QtVRLyIsepEHQPyZcSW6rq9Xq2AcentFdCtIcke8hvnLJsH7KlKl+67MRW9kqXrDRd6WnubU9ZZZt6DuSnv0PShJngWq1WurF/JcRm+C9/h7BOJe/Wt9JT1rvBY9yPhDCoAj0lBIDHKJUQBlWgp4QA8BilEsKgCvSUEAAeo1RCGFSBnhICwGOUSgiDKtBTQgB4jFIJYVAFekoIAI9RKiEMqkBPCQHgMUolhEEV6CkhADxGqYQwqAI9JQSAxyiVEAZVoKeEAPAYpRLCoAr0lBAAHqNUQhhUgZ4SAsBjlEoIgyrQU0IAeIxSCWFQBXpKCACPUSohDKpATwkB4DFKJYRBFegpIQA8RqmEMKgCPSUEgMcolRAGVaCnhADwGKUSwqAK9JQQAB6jVEIYVIGeEgLAY5RKCIMq0FNCAHiMUglhUAV6SggAj1EqIQyqQM8/f1X9Lw1CsGoAAAAASUVORK5CYII="/>
-    <p> {{ card.power }} / {{ card.maxPower === "Unlimited" ? "∞" : card.maxPower }}</p>
+  <article class="relative w-36 h-52 rounded-lg overflow-hidden border-2 transition-all duration-200 hover:shadow-xl cursor-pointer"
+           :class="[
+             card.maxPower === 0 ? 'border-gray-600' : 'border-slate-700',
+           ]"
+           :style="getElementalBackground(card.elements)">
+    <!-- Card Glow Effect -->
+    <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+    
+    <!-- Card Content -->
+    <div class="relative h-full flex flex-col justify-between p-3">
+      <!-- Card Name -->
+      <div class="text-center">
+        <h3 class="font-bold text-white text-lg drop-shadow-lg bg-black/30 rounded px-2 py-1 backdrop-blur-sm">
+          {{ card.name }}
+        </h3>
+      </div>
+      
+      <!-- Card Image Area -->
+      <div class="flex-1 flex items-center justify-center my-2">
+        <div class="w-24 h-24 bg-white/20 rounded-lg backdrop-blur-sm flex items-center justify-center">
+          <span class="text-white/50 text-xs">Image</span>
+        </div>
+      </div>
+      
+      <!-- Power Stats -->
+      <div class="bg-black/60 backdrop-blur-sm rounded-lg p-2">
+        <div class="text-center">
+          <span class="text-2xl font-bold text-white">{{ card.power }}</span>
+          <span class="text-xl text-white/80 mx-1">/</span>
+          <span class="text-2xl font-bold text-white">{{ card.maxPower === "Unlimited" ? "∞" : card.maxPower }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Shine Effect -->
+    <div class="absolute inset-0 bg-gradient-to-br from-white/0 via-white/10 to-white/0 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
   </article>
 </template>
 

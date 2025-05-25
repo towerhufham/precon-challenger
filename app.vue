@@ -1,44 +1,84 @@
 <template>
-  <div>
-    <!-- Field -->
-    <section class="absolute top-0 left-0 flex gap-1">
-      <template v-for="card of gameState.Field">
-        <Card :card @click="cardClickHandler(card)"/>
-      </template>
-    </section>
-    <!-- Hand -->
-    <section class="absolute bottom-0 left-0 flex gap-1">
-      <template v-for="card of gameState.Hand">
-        <Card :card @click="cardClickHandler(card)"/>
-      </template>
+  <div class="relative w-full h-screen bg-gradient-to-br from-slate-900 to-slate-800 overflow-hidden">
+    <!-- Background Pattern -->
+    <!-- <div class="absolute inset-0 opacity-10">
+      <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%239C92AC" fill-opacity="0.4"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+    </div> -->
+
+    <!-- Field Area -->
+    <section class="absolute top-8 left-8 right-8">
+      <div class="mb-4">
+        <h2 class="text-white text-sm font-semibold tracking-wider uppercase opacity-80">Field</h2>
+      </div>
+      <div class="flex gap-4 flex-wrap">
+        <template v-for="card of gameState.Field">
+          <div class="transform transition-all duration-200 hover:scale-105 hover:-translate-y-2">
+            <Card :card @click="cardClickHandler(card)"/>
+          </div>
+        </template>
+      </div>
     </section>
 
-    <!-- Energy -->
-    <div class="absolute bottom-0 right-0">
-      <ElementalIcons :energy-pool="gameState.energyPool"/>
+    <!-- Hand Area -->
+    <section class="absolute bottom-8 left-8 right-96">
+      <div class="mb-4">
+        <h2 class="text-white text-sm font-semibold tracking-wider uppercase opacity-80">Your Hand</h2>
+      </div>
+      <div class="flex gap-4 flex-wrap">
+        <template v-for="card of gameState.Hand">
+          <div class="transform transition-all duration-200 hover:scale-105 hover:-translate-y-2">
+            <Card :card @click="cardClickHandler(card)"/>
+          </div>
+        </template>
+      </div>
+    </section>
+
+    <!-- Energy Pool -->
+    <div class="absolute bottom-8 right-8">
+      <div class="bg-black/40 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+        <h3 class="text-white text-sm font-semibold mb-2 tracking-wider uppercase">Energy Pool</h3>
+        <ElementalIcons :energy-pool="gameState.energyPool"/>
+      </div>
     </div>
 
-    <div class="w-128 absolute top-0 right-0">
+    <!-- Side Panel -->
+    <div class="absolute top-8 right-8 w-80">
       <!-- Ability Chooser -->
-      <div v-if="interfaceState.mode === 'Choosing Ability'">
-        <div v-for="ability of interfaceState.card.abilities" :key="ability.name" class="border border-black" 
-        :class="canUseAbility({gameState, thisCard: interfaceState.card, thisAbility: ability}) ? 'bg-white' : 'bg-slate-200'" @click="abilityClickHandler(ability)">
-          <p class="font-bold">{{ ability.name }}</p>
-          <ElementalIcons :energy-pool="ability.energyCost"/>
-          <p>{{ ability.description }}</p>
+      <div v-if="interfaceState.mode === 'Choosing Ability'" class="bg-black/60 backdrop-blur-sm rounded-lg border border-white/20 overflow-hidden">
+        <div class="bg-gradient-to-r from-purple-600 to-blue-600 p-4">
+          <h3 class="text-white font-bold text-lg">Choose an Ability</h3>
         </div>
-        <div @click="cancelAbility" class="bg-red-200 border border-black">
-          Cancel
+        <div class="p-2">
+          <div v-for="ability of interfaceState.card.abilities" :key="ability.name" 
+               class="m-2 rounded-lg border transition-all duration-200 cursor-pointer"
+               :class="canUseAbility({gameState, thisCard: interfaceState.card, thisAbility: ability}) 
+                 ? 'bg-gradient-to-r from-slate-700 to-slate-600 border-blue-400 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-500/20' 
+                 : 'bg-slate-800/50 border-slate-600 opacity-50 cursor-not-allowed'" 
+               @click="abilityClickHandler(ability)">
+            <div class="p-4">
+              <p class="font-bold text-white mb-2">{{ ability.name }}</p>
+              <div class="mb-3">
+                <ElementalIcons :energy-pool="ability.energyCost"/>
+              </div>
+              <p class="text-gray-300 text-sm">{{ ability.description }}</p>
+            </div>
+          </div>
+          <div @click="cancelAbility" 
+               class="m-2 bg-gradient-to-r from-red-700 to-red-600 rounded-lg border border-red-400 p-4 cursor-pointer hover:border-red-300 hover:shadow-lg hover:shadow-red-500/20 transition-all duration-200">
+            <p class="text-white font-semibold text-center">Cancel</p>
+          </div>
         </div>
       </div>
 
       <!-- Selection Chooser -->
-      <div v-if="interfaceState.mode === 'Choosing Selections'" class="border border-black">
-          
+      <div v-if="interfaceState.mode === 'Choosing Selections'" class="bg-black/60 backdrop-blur-sm rounded-lg border border-white/20 p-4">
+        <h3 class="text-white font-bold text-lg mb-4">Make Your Selection</h3>
+        <!-- Selection content here -->
       </div>
-     </div>
+    </div>
   </div>
 </template>
+
 
 <script setup lang="ts">
   import type { CardDefinition, GameState, AbilityUsageContext, Selections, CardInstance, Ability, SelectionCriteria  } from './game';
