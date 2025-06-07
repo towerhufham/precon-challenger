@@ -215,7 +215,7 @@ export const canUseAbility = (ctx: AbilityUsageContext): boolean => {
   }
   //now do state check
   if (typeof ability.stateCheck === "function") {
-    return ability.stateCheck(ctx)
+    if (!ability.stateCheck(ctx)) return false
   }
   //now check for energy in pool
   if (!canSpendEnergy(ctx.gameState.energyPool, ctx.thisAbility.energyCost)) return false

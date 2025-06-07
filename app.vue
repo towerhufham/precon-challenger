@@ -36,7 +36,7 @@
       <div v-if="interfaceState.mode === 'Choosing Selections'" class="border border-black">
           
       </div>
-     </div>
+    </div>
   </div>
 </template>
 
