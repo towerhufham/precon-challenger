@@ -1,7 +1,13 @@
 <template>
   <div>
+    <!-- Extra -->
+     <section class="absolute top-0 left-0 flex gap-1">
+      <template v-for="card of gameState.Extra">
+        <Card :card @click="cardClickHandler(card)"/>
+      </template>
+    </section>
     <!-- Field -->
-    <section class="absolute top-0 left-0 flex gap-1">
+    <section class="absolute top-[35vh] left-0 flex gap-1">
       <template v-for="card of gameState.Field">
         <Card :card @click="cardClickHandler(card)"/>
       </template>
@@ -41,68 +47,19 @@
 </template>
 
 <script setup lang="ts">
-  import type { CardDefinition, GameState, AbilityUsageContext, Selections, CardInstance, Ability, SelectionCriteria  } from './game';
-  import { initGameState, getCardById, getZoneOfCard, moveCardToZone, drawCard, canUseAbility, applyEffect, mutateCard } from './game';
-
-  const simpleSummon: Ability = {
-    name: "Simple Summon",
-    description: "Moves from hand to field",
-    limit: 1,
-    energyCost: {},
-    fromZone: "Hand",
-    toZone: "Field"
-  }
-
-  const testCard: CardDefinition = {
-    collectionNumber: -1,
-    name: "Test Card",
-    elements: ["Holy", "Wind"],
-    abilities: [simpleSummon],
-    power: 100,
-    maxPower: "Unlimited"
-  }
-  const testDrawer: CardDefinition = {
-    collectionNumber: -2,
-    name: "Test Drawer",
-    elements: ["Fire"],
-    abilities: [simpleSummon, {
-      name: "Draw",
-      description: "Draw 1 card",
-      limit: 1,
-      energyCost: {"Holy": 1},
-      fromZone: "Field",
-      effect: (ctx: AbilityUsageContext, _) => {return drawCard(ctx.gameState)}
-    }],
-    power: 50,
-    maxPower: 250
-  }
-  const testMutator: CardDefinition = {
-    collectionNumber: -3,
-    name: "Mutator",
-    elements: ["Water"],
-    abilities: [{
-      name: "Turn Evil",
-      description: "Becomes Dark type (from hand)",
-      limit: 1,
-      energyCost: {"Dark": 1},
-      fromZone: "Hand",
-      effect: (ctx: AbilityUsageContext, _) => {return mutateCard(ctx.gameState, ctx.thisCard.id, {elements: ["Dark"]})}
-    }],
-    power: 200,
-    maxPower: 500
-  }
+  import type { GameState, AbilityUsageContext, Selections, CardInstance, Ability, SelectionCriteria  } from './game';
+  import { initGameState, spawnCardTo, canUseAbility, applyEffect } from './game';
+  import { superFallingStar, sunRiser } from "./cards";
 
   const decklist = [
-    {...testCard},
-    {...testCard},
-    {...testCard},
-    {...testCard},
-    {...testMutator},
-    {...testMutator},
-    {...testDrawer},
-    {...testDrawer},
-    {...testDrawer},
-    {...testDrawer},
+    {...superFallingStar},
+    {...superFallingStar},
+    {...superFallingStar},
+    {...superFallingStar},
+    {...superFallingStar},
+    {...superFallingStar},
+    {...superFallingStar},
+    {...superFallingStar},
   ]
 
   const gameState: Ref<GameState> = ref(initGameState(decklist))
@@ -110,9 +67,10 @@
   gameState.value.energyPool = {
     ...gameState.value.energyPool,
     "Holy": 3,
-    "Plant": 1,
-    "Dark": 2
+    "Stone": 5
   }
+  //add some starting extras
+  gameState.value = spawnCardTo(gameState.value, sunRiser, "Extra")
 
   type InterfaceState = {
     mode: "Standby"

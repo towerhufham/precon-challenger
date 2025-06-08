@@ -9,7 +9,7 @@ export type Elemental = typeof ALL_ELEMENTS[number]
 
 export type EnergyPool = {[key in Elemental]: number}
 
-export const ALL_ZONES = ["Deck", "Hand", "Field", "GY", "Removed"] as const
+export const ALL_ZONES = ["Deck", "Hand", "Field", "Extra", "GY", "Removed"] as const
 export type Zone = typeof ALL_ZONES[number]
 
 // --------------- Cards --------------- //
@@ -19,8 +19,8 @@ export type CardDefinition = {
   name: string
   elements: Elemental[]
   abilities: Ability[]
-  power: number
-  maxPower: number | "Unlimited"
+  // power: number
+  // maxPower: number | "Unlimited"
 }
 
 export type CardInstance = CardDefinition & {
@@ -36,6 +36,7 @@ export type GameState = {
   Deck: CardInstance[]
   Hand: CardInstance[]
   Field: CardInstance[]
+  Extra: CardInstance[]
   GY: CardInstance[]
   Removed: CardInstance[]
   energyPool: EnergyPool
@@ -71,6 +72,7 @@ export const initGameState = (decklist: CardDefinition[]): GameState => {
     Deck,
     Hand: [],
     Field: [],
+    Extra: [],
     GY: [],
     Removed: [],
     energyPool: makeEmptyEnergyPool(),
@@ -86,6 +88,14 @@ export const instantiateCard = (definition: CardDefinition, id: number): CardIns
   }
   return {
     ...definition, id, abilityUsages
+  }
+}
+
+export const spawnCardTo = (gs: GameState, definition: CardDefinition, to: Zone): GameState => {
+  return {
+    ...gs,
+    nextId: gs.nextId + 1,
+    [to]: [...gs[to], instantiateCard(definition, gs.nextId)]
   }
 }
 
@@ -148,7 +158,7 @@ export const mutateCard = (gs: GameState, id: number, mutations: Partial<CardIns
 export type Ability = {
   name: string
   description: string
-  energyCost: Partial<EnergyPool>
+  energyCost: Partial<EnergyPool> //todo: any energy, doubling costs, etc
   limit: number | "Unlimited"
   fromZone: Zone | "Any"
   toZone?: Zone
@@ -214,7 +224,7 @@ export const canUseAbility = (ctx: AbilityUsageContext): boolean => {
     if (ability.fromZone !== getZoneOfCard(ctx.gameState, ctx.thisCard.id)) return false
   }
   //now do state check
-  if (typeof ability.stateCheck === "function") {
+  if (ability.stateCheck) {
     if (!ability.stateCheck(ctx)) return false
   }
   //now check for energy in pool
