@@ -179,7 +179,6 @@ export type SelectionCriteria = {
   cardCriteria: (card: CardInstance) => boolean
 } | {
   type: "Element"
-  amount: number | {min: number, max: number} | "Unlimited"
   allowedElements: "All" | Elemental[]
 }
 

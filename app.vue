@@ -1,5 +1,9 @@
 <template>
   <div>
+    <!-- Debug -->
+     <div class="absolute top-0 left-[45vw]">
+       <p>interfaceState: {{ interfaceState.mode }}</p>
+     </div>
     <!-- Extra -->
      <section class="absolute top-0 left-0 flex gap-1">
       <template v-for="card of gameState.Extra">
@@ -21,7 +25,7 @@
 
     <!-- Energy -->
     <div class="absolute bottom-0 right-0">
-      <ElementalIcons :energy-pool="gameState.energyPool"/>
+      <ElementalIconList :energy-pool="gameState.energyPool" size="3em"/>
     </div>
 
     <div class="w-128 absolute top-0 right-0">
@@ -30,7 +34,7 @@
         <div v-for="ability of interfaceState.card.abilities" :key="ability.name" class="border border-black" 
         :class="canUseAbility({gameState, thisCard: interfaceState.card, thisAbility: ability}) ? 'bg-white' : 'bg-slate-200'" @click="abilityClickHandler(ability)">
           <p class="font-bold">{{ ability.name }}</p>
-          <ElementalIcons :energy-pool="ability.energyCost"/>
+          <ElementalIconList :energy-pool="ability.energyCost" size="1.5em"/>
           <p>{{ ability.description }}</p>
         </div>
         <div @click="cancelAbility" class="bg-red-200 border border-black">
@@ -39,8 +43,16 @@
       </div>
 
       <!-- Selection Chooser -->
-      <div v-if="interfaceState.mode === 'Choosing Selections'" class="border border-black">
-          
+      <div v-if="interfaceState.mode === 'Choosing Selections'">
+        <div class="w-128 absolute top-[30vh] right-[25vw] w-[50vw] h-[30vh] bg-blue-200 overflow-y-scroll border border-black">
+          <section v-for="criteria of interfaceState.criteria" class="border border-black">
+            <!-- Choosing Elements -->
+            <div v-if="criteria.type === 'Element'">
+              <ElementSelector :criteria/>
+            </div>
+          </section>
+          <button class="bg-blue-400 p-2 rounded-md">Confirm</button>
+        </div>
       </div>
     </div>
   </div>
