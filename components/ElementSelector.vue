@@ -11,10 +11,10 @@
         size="3em" 
         :class="{
           'grayscale': !shownElements.includes(el), 
-          'border-4 border-white box-border': selected === el,
+          'border-4 border-white box-border': model === el,
         }"
         class="cursor-pointer"
-        @click="selected === el ? selected = null : selected = el"/>
+        @click="model === el ? model = null : model = el"/>
     </div>
   </div>
 </template>
@@ -30,5 +30,5 @@
       ? ALL_ELEMENTS
       : props.criteria.allowedElements
   })
-  const selected: Ref<Elemental|null> = ref(null)
+  const model = defineModel<Elemental|null>()
 </script>

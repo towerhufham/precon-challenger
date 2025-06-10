@@ -162,7 +162,7 @@ export type Ability = {
   limit: number | "Unlimited"
   fromZone: Zone | "Any"
   toZone?: Zone
-  selections?: SelectionCriteria[] | ((ctx: AbilityUsageContext) => SelectionCriteria[])
+  selections?: SelectionCriteria //[] | ((ctx: AbilityUsageContext) => SelectionCriteria[])
   stateCheck?: (ctx: AbilityUsageContext) => boolean
   effect?: (ctx: AbilityUsageContext, selections: Selections) => GameState
 }
@@ -183,13 +183,8 @@ export type SelectionCriteria = {
 }
 
 export type Selections = {
-  cards?: CardInstance[]
-  elements?: Elemental[]
-}
-
-export type AbilitySelections = {
-  cards?: CardInstance[]
-  elements?: Elemental[]
+  card?: CardInstance
+  element?: Elemental
 }
 
 export const canSpendEnergy = (pool: EnergyPool, cost: Partial<EnergyPool>): boolean => {
@@ -232,9 +227,9 @@ export const canUseAbility = (ctx: AbilityUsageContext): boolean => {
   return true
 }
 
-export const applyEffect = (ctx: AbilityUsageContext): GameState => {
+export const applyEffect = (ctx: AbilityUsageContext, selections: Selections): GameState => {
   //todo: this function feels very gunky, i miss clojure arrow operators...
-  const stateWithEffect = (ctx.thisAbility.effect) ? ctx.thisAbility.effect(ctx, {}) : ctx.gameState
+  const stateWithEffect = (ctx.thisAbility.effect) ? ctx.thisAbility.effect(ctx, selections) : ctx.gameState
   const stateWithMovedCard = (ctx.thisAbility.toZone) ? moveCardToZone(stateWithEffect, ctx.thisCard.id, ctx.thisAbility.toZone) : stateWithEffect
   const stateWithEnergyUpdated = {
     ...stateWithMovedCard,

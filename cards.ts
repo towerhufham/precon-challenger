@@ -25,9 +25,9 @@ export const superFallingStar: CardDefinition = {
     limit: "Unlimited",
     fromZone: "Hand",
     toZone: "GY",
-    selections: [{type: "Element", allowedElements: "All"}], //todo: implement logic and ui
+    selections: {type: "Element", allowedElements: "All"},
     effect: (ctx, selections) => {
-      const chosenElement = selections.elements![0] //todo: more typesafe way of doing this?
+      const chosenElement = selections.element! //todo: more typesafe way of doing this?
       //definitely needs an addEnergy() helper
       return {
         ...ctx.gameState,
