@@ -76,6 +76,7 @@ export const bennyTheBouncer: CardDefinition = {
     selectionCriteria: {
       type: "Card",
       zones: ["Field"],
+      selfTarget: false,
       cardCriteria: () => true
     },
     effect: (ctx, selections) => {

@@ -178,6 +178,7 @@ export type SelectionCriteria = CardSelectionCriteria | ElementalSelectionCriter
 export type CardSelectionCriteria = {
   type: "Card"
   zones: Zone[]
+  selfTarget: boolean
   cardCriteria: (card: CardInstance) => boolean
 }
 

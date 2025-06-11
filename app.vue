@@ -46,11 +46,12 @@
       <div v-if="interfaceState.mode === 'Choosing Selections'">
         <div class="w-128 absolute top-[30vh] right-[25vw] w-[50vw] h-[30vh] bg-blue-200 overflow-y-scroll border border-black">
           <!-- Choosing Elements -->
+          <button class="bg-red-400 p-2 rounded-md" @click="cancelAbility">Cancel</button>
           <div v-if="interfaceState.criteria.type === 'Element'">
             <ElementSelector :criteria="interfaceState.criteria" v-model="selectedElement"/>
           </div>
           <div v-else-if="interfaceState.criteria.type === 'Card'">
-            <CardSelector :criteria="interfaceState.criteria" :gs="gameState" v-model="selectedCard"/>
+            <CardSelector :criteria="interfaceState.criteria" :ctx="interfaceState.ctx" v-model="selectedCard"/>
           </div>
           <button class="bg-blue-400 p-2 rounded-md" @click="confirmAbilityWithSelections">Confirm</button>
         </div>

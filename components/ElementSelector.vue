@@ -20,8 +20,6 @@
   import type { Elemental, ElementalSelectionCriteria } from '~/game';
   const props = defineProps<{criteria: ElementalSelectionCriteria}>()
   const shownElements = computed(() => {
-    //error, see top comment
-    if (props.criteria.type !== "Element") return []
     return props.criteria.allowedElements === "All"
       ? ALL_ELEMENTS
       : props.criteria.allowedElements
