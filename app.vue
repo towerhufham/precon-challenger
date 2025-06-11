@@ -49,6 +49,9 @@
           <div v-if="interfaceState.criteria.type === 'Element'">
             <ElementSelector :criteria="interfaceState.criteria" v-model="selectedElement"/>
           </div>
+          <div v-else-if="interfaceState.criteria.type === 'Card'">
+            <CardSelector :criteria="interfaceState.criteria" :gs="gameState" v-model="selectedCard"/>
+          </div>
           <button class="bg-blue-400 p-2 rounded-md" @click="confirmAbilityWithSelections">Confirm</button>
         </div>
       </div>
@@ -59,17 +62,17 @@
 <script setup lang="ts">
   import type { GameState, AbilityUsageContext, Elemental, CardInstance, Ability, SelectionCriteria, Selections  } from './game';
   import { initGameState, spawnCardTo, canUseAbility, applyEffect } from './game';
-  import { superFallingStar, sunRiser } from "./cards";
+  import { superFallingStar, sunRiser, bennyTheBouncer } from "./cards";
 
   const decklist = [
     {...superFallingStar},
     {...superFallingStar},
     {...superFallingStar},
     {...superFallingStar},
-    {...superFallingStar},
-    {...superFallingStar},
-    {...superFallingStar},
-    {...superFallingStar},
+    {...bennyTheBouncer},
+    {...bennyTheBouncer},
+    {...bennyTheBouncer},
+    {...bennyTheBouncer},
   ]
 
   const gameState: Ref<GameState> = ref(initGameState(decklist))
@@ -83,6 +86,7 @@
   gameState.value = spawnCardTo(gameState.value, sunRiser, "Extra")
 
   const selectedElement: Ref<Elemental|null> = ref(null)
+  const selectedCard: Ref<CardInstance|null> = ref(null)
 
   type InterfaceState = {
     mode: "Standby"
@@ -109,10 +113,10 @@
       thisAbility: ability
     }
     if (!canUseAbility(ctx)) return 
-    if (ability.selections) {
+    if (ability.selectionCriteria) {
       //set interface to choosing selections
       //const criteria = (typeof ability.selections === "function") ? ability.selections(ctx) : ability.selections
-      const criteria = ability.selections //for now
+      const criteria = ability.selectionCriteria //for now
       interfaceState.value = {mode: "Choosing Selections", ctx, criteria}
     } else {
       //no selections needed, do eff
@@ -125,11 +129,13 @@
     if (interfaceState.value.mode !== "Choosing Selections") {
       throw new Error("UI ERROR: calling confirmAbilityWithSelections() while not in Choosing Selections state")
     }
-    if (!selectedElement.value) return //for now
     const selections: Selections = {
-      element: selectedElement.value
+      element: selectedElement.value || undefined,
+      card: selectedCard.value || undefined
     }
     gameState.value = applyEffect(interfaceState.value.ctx, selections)
+    //clear selections
+    selectedElement.value = null
     interfaceState.value = {mode: "Standby"}
   }
 

@@ -162,7 +162,7 @@ export type Ability = {
   limit: number | "Unlimited"
   fromZone: Zone | "Any"
   toZone?: Zone
-  selections?: SelectionCriteria //[] | ((ctx: AbilityUsageContext) => SelectionCriteria[])
+  selectionCriteria?: SelectionCriteria //[] | ((ctx: AbilityUsageContext) => SelectionCriteria[])
   stateCheck?: (ctx: AbilityUsageContext) => boolean
   effect?: (ctx: AbilityUsageContext, selections: Selections) => GameState
 }
@@ -173,11 +173,15 @@ export type AbilityUsageContext = {
   thisAbility: Ability
 }
 
-export type SelectionCriteria = {
+export type SelectionCriteria = CardSelectionCriteria | ElementalSelectionCriteria
+
+export type CardSelectionCriteria = {
   type: "Card"
-  amount: number | {min: number, max: number} | "Unlimited"
+  zones: Zone[]
   cardCriteria: (card: CardInstance) => boolean
-} | {
+}
+
+export type ElementalSelectionCriteria = {
   type: "Element"
   allowedElements: "All" | Elemental[]
 }

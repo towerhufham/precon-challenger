@@ -25,7 +25,7 @@ export const superFallingStar: CardDefinition = {
     limit: "Unlimited",
     fromZone: "Hand",
     toZone: "GY",
-    selections: {type: "Element", allowedElements: "All"},
+    selectionCriteria: {type: "Element", allowedElements: "All"},
     effect: (ctx, selections) => {
       const chosenElement = selections.element! //todo: more typesafe way of doing this?
       //definitely needs an addEnergy() helper
@@ -63,25 +63,23 @@ export const sunRiser: CardDefinition = {
   }]
 }
 
-// export const ghostGem: CardDefinition = {
-//   collectionNumber: 3,
-//   name: "Ghost Gem",
-//   elements: ["Stone", "Dark"],
-//   abilities: [simpleSummon, {
-//     name: "",
-//     description: "Return all Stone-type cards from your GY to your Hand.",
-//     energyCost: {"Holy": 3},
-//     limit: "Unlimited",
-//     fromZone: "Extra",
-//     effect: (ctx, _) => {
-//       //todo: can make a moveAll() helper function
-//       let newGs = {...ctx.gameState}
-//       for (const c of ctx.gameState.GY) {
-//         if (c.elements.includes("Stone")) {
-//           newGs = moveCardToZone(newGs, c.id, "Hand")
-//         }
-//       }
-//       return newGs
-//     }
-//   }]
-// }
+export const bennyTheBouncer: CardDefinition = {
+  collectionNumber: -1,
+  name: "Benny the Bouncer",
+  elements: ["Dark"],
+  abilities: [simpleSummon, {
+    name: "Get 'em outta here!",
+    description: "Move target card from the Field to the Hand.",
+    energyCost: {"Dark": 1},
+    limit: "Unlimited",
+    fromZone: "Field",
+    selectionCriteria: {
+      type: "Card",
+      zones: ["Field"],
+      cardCriteria: () => true
+    },
+    effect: (ctx, selections) => {
+      return moveCardToZone(ctx.gameState, selections.card!.id, "Hand")
+    }
+  }]
+}

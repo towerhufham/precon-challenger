@@ -1,14 +1,10 @@
 <template>
-  <!-- Todo: maybe different criteria need to be different types -->
-  <!-- that way we can validate at the prop level -->
-  <!-- though there might be a cooler way of doing that with TS -->
-  <div v-if="criteria.type === 'Element'">
+  <div>
     <p>Select element:</p>
     <div class="flex gap-4 items-center">
       <ElementalIcon 
-        v-for="el of ALL_ELEMENTS"
-        :elemental="el" 
-        size="3em" 
+        v-for="el of ALL_ELEMENTS" :key="el"
+        :elemental="el" size="3em" 
         :class="{
           'grayscale': !shownElements.includes(el), 
           'border-4 border-white box-border': model === el,
@@ -21,8 +17,8 @@
 
 <script setup lang="ts">
   import { ALL_ELEMENTS } from '~/game';
-  import type { Elemental, SelectionCriteria } from '~/game';
-  const props = defineProps<{criteria: SelectionCriteria}>()
+  import type { Elemental, ElementalSelectionCriteria } from '~/game';
+  const props = defineProps<{criteria: ElementalSelectionCriteria}>()
   const shownElements = computed(() => {
     //error, see top comment
     if (props.criteria.type !== "Element") return []
