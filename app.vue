@@ -37,7 +37,7 @@
           <ElementalIconList :energy-pool="ability.energyCost" size="1.5em"/>
           <p>{{ ability.description }}</p>
         </div>
-        <div @click="cancelAbility" class="bg-red-200 border border-black">
+        <div @click="endAbility" class="bg-red-200 border border-black">
           Cancel
         </div>
       </div>
@@ -46,7 +46,7 @@
       <div v-if="interfaceState.mode === 'Choosing Selections'">
         <div class="w-128 absolute top-[30vh] right-[25vw] w-[50vw] h-[30vh] bg-blue-200 overflow-y-scroll border border-black">
           <!-- Choosing Elements -->
-          <button class="bg-red-400 p-2 rounded-md" @click="cancelAbility">Cancel</button>
+          <button class="bg-red-400 p-2 rounded-md" @click="endAbility">Cancel</button>
           <div v-if="interfaceState.criteria.type === 'Element'">
             <ElementSelector :criteria="interfaceState.criteria" v-model="selectedElement"/>
           </div>
@@ -122,7 +122,7 @@
     } else {
       //no selections needed, do eff
       gameState.value = applyEffect(ctx, {})
-      interfaceState.value = {mode: "Standby"}
+      endAbility()
     }
   }
 
@@ -135,12 +135,13 @@
       card: selectedCard.value || undefined
     }
     gameState.value = applyEffect(interfaceState.value.ctx, selections)
-    //clear selections
-    selectedElement.value = null
-    interfaceState.value = {mode: "Standby"}
+    //clear selections & go to standby
+    endAbility()
   }
 
-  const cancelAbility = () => {
+  const endAbility = () => {
+    selectedElement.value = null
+    selectedCard.value = null
     interfaceState.value = {mode: "Standby"}
   }
 </script>
