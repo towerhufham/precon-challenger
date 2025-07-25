@@ -1,60 +1,81 @@
 <template>
-  <div>
-    <!-- Debug -->
-     <div class="absolute top-0 left-[45vw]">
-       <p>interfaceState: {{ interfaceState.mode }}</p>
-     </div>
-    <!-- Extra -->
-     <section class="absolute top-0 left-0 flex gap-1">
-      <template v-for="card of gameState.Extra">
-        <Card :card @click="cardClickHandler(card)"/>
+  <div class="flex max-screen overflow-hidden">
+    <!-- Left panel -->
+    <div class="flex flex-col items-stretch gap-6 h-screen w-[350px] overflow-hidden orange-grid-bg border border-8 border-orange-600 text-center p-3">
+      <template v-if="interfaceState.mode === 'Choosing Ability'">
+        <p class="text-4xl font-bold text-white">
+          {{ interfaceState.card.name }}
+        </p>
+        <template v-for="ability of interfaceState.card.abilities" :key="ability.name">
+          <article class="border border-4 border-orange-500 rounded-2xl p-1 bg-orange-800/25"
+          :class="canUseAbility({gameState, thisCard: interfaceState.card, thisAbility: ability}) ? 'cursor-pointer' : 'grayscale brightness-50'" 
+          @click="abilityClickHandler(ability)">
+            <p class="text-2xl font-bold text-white">
+              {{ ability.name }}
+            </p>
+            <div class="flex justify-center my-1">
+              <ElementalIconList :energy-pool="ability.energyCost" size="1.5em"/>
+            </div>
+            <p class="text-sm text-stone-300 italic">
+              From {{ ability.fromZone }}
+              / {{ ability.limit }} per turn
+              {{ ability.toZone ? `/ Sends to ${ability.toZone}` : "" }}
+            </p>
+            <p class="text-lg text-white">
+              {{ ability.description }}
+            </p>
+          </article>
+        </template>
+        <article class="border border-4 border-white rounded-2xl p-1 bg-white/25 cursor-pointer" @click="endAbility">
+          <p class="text-2xl font-bold text-white">
+            Cancel
+          </p>
+        </article>
       </template>
-    </section>
-    <!-- Field -->
-    <section class="absolute top-[35vh] left-0 flex gap-1">
-      <template v-for="card of gameState.Field">
-        <Card :card @click="cardClickHandler(card)"/>
-      </template>
-    </section>
-    <!-- Hand -->
-    <section class="absolute bottom-0 left-0 flex gap-1">
-      <template v-for="card of gameState.Hand">
-        <Card :card @click="cardClickHandler(card)"/>
-      </template>
-    </section>
-
-    <!-- Energy -->
-    <div class="absolute bottom-0 right-0">
-      <ElementalIconList :energy-pool="gameState.energyPool" size="3em"/>
     </div>
 
-    <div class="w-128 absolute top-0 right-0">
-      <!-- Ability Chooser -->
-      <div v-if="interfaceState.mode === 'Choosing Ability'">
-        <div v-for="ability of interfaceState.card.abilities" :key="ability.name" class="border border-black" 
-        :class="canUseAbility({gameState, thisCard: interfaceState.card, thisAbility: ability}) ? 'bg-white' : 'bg-slate-200'" @click="abilityClickHandler(ability)">
-          <p class="font-bold">{{ ability.name }}</p>
-          <ElementalIconList :energy-pool="ability.energyCost" size="1.5em"/>
-          <p>{{ ability.description }}</p>
-        </div>
-        <div @click="endAbility" class="bg-red-200 border border-black">
-          Cancel
-        </div>
+    <!-- Center panel -->
+    <div class="flex-grow grid grid-rows-3 h-screen overflow-hidden green-grid-bg">
+      <!-- Upper third -->
+      <div class="flex justify-center items-center gap-2">
+        <template v-for="card of gameState.Extra" :key="card.id">
+          <Card :card @click="cardClickHandler(card)"/>
+        </template>
       </div>
+      <!-- Middle third -->
+      <div class="flex justify-center items-center gap-2">
+        <template v-for="card of gameState.Field" :key="card.id">
+          <Card :card @click="cardClickHandler(card)"/>
+        </template>
+      </div>
+      <!-- Lower third -->
+      <div class="flex justify-center items-center gap-2">
+        <template v-for="card of gameState.Hand" :key="card.id">
+          <Card :card @click="cardClickHandler(card)"/>
+        </template>
+      </div>
+    </div>
 
-      <!-- Selection Chooser -->
-      <div v-if="interfaceState.mode === 'Choosing Selections'">
-        <div class="w-128 absolute top-[30vh] right-[25vw] w-[50vw] h-[30vh] bg-blue-200 overflow-y-scroll border border-black">
-          <!-- Choosing Elements -->
-          <button class="bg-red-400 p-2 rounded-md" @click="endAbility">Cancel</button>
-          <div v-if="interfaceState.criteria.type === 'Element'">
-            <ElementSelector :criteria="interfaceState.criteria" v-model="selectedElement"/>
-          </div>
-          <div v-else-if="interfaceState.criteria.type === 'Card'">
-            <CardSelector :criteria="interfaceState.criteria" :ctx="interfaceState.ctx" v-model="selectedCard"/>
-          </div>
-          <button class="bg-blue-400 p-2 rounded-md" @click="confirmAbilityWithSelections">Confirm</button>
+    <!-- Right panel -->
+    <div class="flex flex-col h-screen w-[350px] overflow-hidden orange-grid-bg border border-8 border-orange-600 p-3">
+      <p class="text-4xl font-bold text-white text-center">
+        Energy Pool
+      </p>
+      <ElementalIconList :energy-pool="gameState.energyPool" size="2em" class="mt-3 flex-wrap justify-center"/>
+    </div>
+
+    <!-- Selection Chooser -->
+    <div v-if="interfaceState.mode === 'Choosing Selections'">
+      <div class="w-128 absolute top-[20vh] right-[25vw] w-[50vw] h-[50vh] bg-blue-200 overflow-y-scroll border border-black">
+        <!-- Choosing Elements -->
+        <button class="bg-red-400 p-2 rounded-md" @click="endAbility">Cancel</button>
+        <div v-if="interfaceState.criteria.type === 'Element'">
+          <ElementSelector :criteria="interfaceState.criteria" v-model="selectedElement"/>
         </div>
+        <div v-else-if="interfaceState.criteria.type === 'Card'">
+          <CardSelector :criteria="interfaceState.criteria" :ctx="interfaceState.ctx" v-model="selectedCard"/>
+        </div>
+        <button class="bg-blue-400 p-2 rounded-md" @click="confirmAbilityWithSelections">Confirm</button>
       </div>
     </div>
   </div>
@@ -63,7 +84,7 @@
 <script setup lang="ts">
   import type { GameState, AbilityUsageContext, Elemental, CardInstance, Ability, SelectionCriteria, Selections  } from './game';
   import { initGameState, spawnCardTo, canUseAbility, applyEffect } from './game';
-  import { superFallingStar, sunRiser, bennyTheBouncer } from "./cards";
+  import { superFallingStar, sunRiser, bennyTheBouncer, weirdoTrain, varna } from "./cards";
 
   const decklist = [
     {...superFallingStar},
@@ -73,7 +94,8 @@
     {...bennyTheBouncer},
     {...bennyTheBouncer},
     {...bennyTheBouncer},
-    {...bennyTheBouncer},
+    {...weirdoTrain},
+    {...varna}
   ]
 
   const gameState: Ref<GameState> = ref(initGameState(decklist))
@@ -81,7 +103,7 @@
   gameState.value.energyPool = {
     ...gameState.value.energyPool,
     "Holy": 3,
-    "Stone": 5
+    "Stone": 10
   }
   //add some starting extras
   gameState.value = spawnCardTo(gameState.value, sunRiser, "Extra")
@@ -117,7 +139,7 @@
     if (ability.selectionCriteria) {
       //set interface to choosing selections
       //const criteria = (typeof ability.selections === "function") ? ability.selections(ctx) : ability.selections
-      const criteria = ability.selectionCriteria //for now
+      const criteria = ability.selectionCriteria //limit of one for now
       interfaceState.value = {mode: "Choosing Selections", ctx, criteria}
     } else {
       //no selections needed, do eff
@@ -145,3 +167,23 @@
     interfaceState.value = {mode: "Standby"}
   }
 </script>
+
+<style scoped>
+  .orange-grid-bg {
+    --grid-color: rgba(253, 154, 0, 0.15); /* orange-500 */
+    background-size: 30px 30px;
+    background-color: rgb(29, 41, 61); /* slate-800 */
+    background-image:
+      linear-gradient(to right, var(--grid-color) 2px, transparent 2px),
+      linear-gradient(to bottom, var(--grid-color) 2px, transparent 2px);
+  }
+
+  .green-grid-bg {
+    --grid-color: rgba(0, 188, 125, 0.15); /* emerald-500 */
+    background-size: 20px 20px;
+    background-color: rgb(0, 44, 34); /* slate-800 */
+    background-image:
+      linear-gradient(to right, var(--grid-color) 2px, transparent 2px),
+      linear-gradient(to bottom, var(--grid-color) 2px, transparent 2px);
+  }
+</style>

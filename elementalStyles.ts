@@ -33,3 +33,37 @@ export const getElementalBackground = (elements: Elemental[]) => {
   const deg = elements.length <= 2 ? 180 : 135
   return {"background-image": `linear-gradient(${deg}deg, ${pairs.join(', ')})`}
 }
+
+export const getElementalBorder = (elements: Elemental[]) => {
+  if (elements.length === 0) return {"border": "4px solid rgb(170, 170, 170)"}
+  if (elements.length === 1) return {"border": `4px solid ${getElementalColor(elements[0])}`}
+  let pairs = []
+  let nextStop = 0
+  for (const element of elements) {
+    pairs.push(`${getElementalColor(element)} ${nextStop}%`)
+    nextStop += 100 / (elements.length - 1)
+  }
+  // const deg = elements.length <= 2 ? 180 : 135
+  return {
+    "border": "4px solid transparent",
+    "border-image": `linear-gradient(180deg, ${pairs.join(', ')})`,
+    "border-image-slice": "1"
+  }
+}
+
+export const getElementalText = (elements: Elemental[]) => {
+  if (elements.length === 0) return {"color": "rgb(170, 170, 170)"}
+  if (elements.length === 1) return {"color": getElementalColor(elements[0])}
+  let pairs = []
+  let nextStop = 0
+  for (const element of elements) {
+    pairs.push(`${getElementalColor(element)} ${nextStop}%`)
+    nextStop += 100 / (elements.length - 1)
+  }
+  const deg = elements.length <= 2 ? 180 : 90
+  return {
+    "background-image": `linear-gradient(${deg}deg, ${pairs.join(', ')})`,
+    "color": "transparent",
+    "background-clip": "text"
+  }
+}

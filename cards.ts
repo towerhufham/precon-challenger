@@ -17,7 +17,7 @@ export const simpleSummon: Ability = {
 export const superFallingStar: CardDefinition = {
   collectionNumber: 1,
   name: "Super Falling Star",
-  elements: ["Stone"],
+  elements: ["Holy", "Stone"],
   abilities: [{
     name: "Chromatic Prism",
     description: "Gain one energy of any type.",
@@ -45,7 +45,7 @@ export const sunRiser: CardDefinition = {
   name: "Sunriser",
   elements: ["Holy", "Stone"],
   abilities: [{
-    name: "Second Runrise",
+    name: "Second Sunrise",
     description: "Return all Stone-type cards from your GY to your Hand.",
     energyCost: {"Holy": 3},
     limit: "Unlimited",
@@ -83,4 +83,18 @@ export const bennyTheBouncer: CardDefinition = {
       return moveCardToZone(ctx.gameState, selections.card!.id, "Hand")
     }
   }]
+}
+
+export const weirdoTrain: CardDefinition = {
+  collectionNumber: -2,
+  name: "Weirdo Train",
+  elements: ["Fire", "Thunder", "Water"],
+  abilities: [simpleSummon]
+}
+
+export const varna: CardDefinition = {
+  collectionNumber: -3,
+  name: "Varna",
+  elements: ["Holy", "Fire", "Stone", "Thunder", "Plant", "Wind", "Water", "Dark"],
+  abilities: [simpleSummon]
 }
