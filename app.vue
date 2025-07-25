@@ -7,8 +7,8 @@
           {{ interfaceState.card.name }}
         </p>
         <template v-for="ability of interfaceState.card.abilities" :key="ability.name">
-          <article class="border border-4 border-orange-500 rounded-2xl p-1 bg-orange-800/25"
-          :class="canUseAbility({gameState, thisCard: interfaceState.card, thisAbility: ability}) ? 'cursor-pointer' : 'grayscale brightness-50'" 
+          <article class="border border-4 border-orange-500 rounded-2xl p-1 bg-orange-800/25 transition duration-150"
+          :class="canUseAbility({gameState, thisCard: interfaceState.card, thisAbility: ability}) ? 'cursor-pointer hover:border-orange-300' : 'grayscale brightness-50'" 
           @click="abilityClickHandler(ability)">
             <p class="text-2xl font-bold text-white">
               {{ ability.name }}
@@ -26,7 +26,8 @@
             </p>
           </article>
         </template>
-        <article class="border border-4 border-white rounded-2xl p-1 bg-white/25 cursor-pointer" @click="endAbility">
+        <article class="border border-4 border-white rounded-2xl p-1 bg-white/25 cursor-pointer hover:bg-white/50 transition duration-150" 
+        @click="endAbility">
           <p class="text-2xl font-bold text-white">
             Cancel
           </p>
@@ -35,9 +36,9 @@
     </div>
 
     <!-- Center panel -->
-    <div class="flex-grow grid grid-rows-3 h-screen overflow-hidden green-grid-bg">
+    <div class="flex-grow grid grid-rows-3 h-screen overflow-auto green-grid-bg">
       <!-- Upper third -->
-      <div class="flex justify-center items-center gap-2">
+      <div class="flex justify-center items-center gap-2 bg-black/10">
         <template v-for="card of gameState.Extra" :key="card.id">
           <Card :card @click="cardClickHandler(card)"/>
         </template>
@@ -49,7 +50,7 @@
         </template>
       </div>
       <!-- Lower third -->
-      <div class="flex justify-center items-center gap-2">
+      <div class="flex justify-center items-center gap-2 bg-black/10">
         <template v-for="card of gameState.Hand" :key="card.id">
           <Card :card @click="cardClickHandler(card)"/>
         </template>
@@ -124,8 +125,9 @@
   const interfaceState: Ref<InterfaceState> = ref({mode: "Standby"})
 
   const cardClickHandler = (card: CardInstance) => {
-    if (interfaceState.value.mode !== "Standby") return
-    interfaceState.value = {mode: "Choosing Ability", card}
+    if (interfaceState.value.mode === "Standby" || interfaceState.value.mode === "Choosing Ability") {
+      interfaceState.value = {mode: "Choosing Ability", card}
+    }
   }
 
   const abilityClickHandler = (ability: Ability) => {
