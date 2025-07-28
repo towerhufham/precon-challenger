@@ -1,5 +1,6 @@
 // --------------- Imports --------------- //
 
+import { pipe, D, A, O } from "@mobily/ts-belt"
 import { inPlaceShuffle } from "./utils"
 
 // --------------- Game Constants --------------- //
@@ -57,18 +58,13 @@ const makeEmptyEnergyPool = (): EnergyPool => {
 
 export const initGameState = (decklist: CardDefinition[]): GameState => {
   //instantiate cards into deck
-  let nextId = 0
-  const Deck: CardInstance[] = []
-  for (const cardDef of decklist) {
-    Deck.push(instantiateCard(cardDef, nextId))
-    nextId++
-  }
+  const Deck: CardInstance[] = decklist.map((cardDef, index) => instantiateCard(cardDef, index))
   //shuffle deck
   inPlaceShuffle(Deck)
   //starting state
   const gs: GameState = {
     moves: 0,
-    nextId,
+    nextId: decklist.length,
     Deck,
     Hand: [],
     Field: [],
@@ -77,15 +73,22 @@ export const initGameState = (decklist: CardDefinition[]): GameState => {
     Removed: [],
     energyPool: makeEmptyEnergyPool(),
   }
-  //silly way of drawing starting hand lol
-  return drawCard(drawCard(drawCard(drawCard(drawCard(gs)))))
+  //draw 5
+  return pipe(
+    gs,
+    drawCard,
+    drawCard,
+    drawCard,
+    drawCard,
+    drawCard
+  )
 }
 
 export const instantiateCard = (definition: CardDefinition, id: number): CardInstance => {
-  let abilityUsages: {[abilityName: string]: number} = {}
-  for (const ability of definition.abilities) {
-    abilityUsages[ability.name] = 0
-  }
+  const abilityUsages: {[abilityName: string]: number} = pipe(
+    definition.abilities.map(a => [a.name, 0] as const),
+    D.fromPairs
+  )
   return {
     ...definition, id, abilityUsages
   }
@@ -100,27 +103,37 @@ export const spawnCardTo = (gs: GameState, definition: CardDefinition, to: Zone)
 }
 
 export const drawCard = (gs: GameState): GameState => {
-  if (gs.Deck.length < 1) return gs
-  const topDeck = gs.Deck[0]
-  return moveCardToZone(gs, topDeck.id, "Hand")
+  return pipe(
+    A.head(gs.Deck),
+    O.match(
+      card => moveCardToZone(gs, card.id, "Hand"),
+      () => gs
+    )
+  )
 }
 
 export const getCardById = (gs: GameState, id: number): CardInstance => {
-  for (const zone of ALL_ZONES) {
-    for (const card of gs[zone]) {
-      if (card.id === id) return card
-    }
-  }
-  throw new Error(`GAME ERROR: can't find card instance of id ${id}!`)
+  return pipe(
+    ALL_ZONES,
+    A.map(zone => gs[zone]),
+    A.flat,
+    A.find(card => card.id === id),
+    O.match(
+      card => card,
+      () => {throw new Error(`GAME ERROR: can't find card instance of id ${id}!`)}
+    )
+  )  
 }
 
 export const getZoneOfCard = (gs: GameState, id: number): Zone => {
-  for (const zone of ALL_ZONES) {
-    for (const card of gs[zone]) {
-      if (card.id === id) return zone
-    }
-  }
-  throw new Error(`GAME ERROR: can't find zone of card with id ${id}!`)
+  return pipe(
+    ALL_ZONES,
+    A.find(zone => gs[zone].some(card => card.id === id)),
+    O.match(
+      zone => zone,
+      () => {throw new Error(`GAME ERROR: can't find zone of card with id ${id}!`)}
+    )
+  )
 }
 
 export const moveCardToZone = (gs: GameState, id: number, zone: Zone): GameState => {
@@ -136,20 +149,15 @@ export const mutateCard = (gs: GameState, id: number, mutations: Partial<CardIns
   //sanity check to make sure the id is not being mutated
   if ("id" in mutations) throw new Error(`GAME ERROR: trying to mutate card with id ${id} into having id ${mutations.id}!`)
   const zone = getZoneOfCard(gs, id)
-  const previousCards = []
-  const nextCards = []
-  let foundOurCard = false
-  for (const card of gs[zone]) {
-    if (card.id !== id) {
-      foundOurCard ? nextCards.push(card) : previousCards.push(card)
-    } else {
-      foundOurCard = true
-    }
-  }
-  const mutatedCard = Object.assign(getCardById(gs, id), mutations)
+  const updatedZone = A.map(
+    gs[zone],
+    card => card.id === id 
+      ? { ...card, ...mutations }
+      : card
+  )
   return {
     ...gs,
-    [zone]: [...previousCards, mutatedCard, ...nextCards]
+    [zone]: updatedZone
   }
 }
 
@@ -193,64 +201,76 @@ export type Selections = {
 }
 
 export const canSpendEnergy = (pool: EnergyPool, cost: Partial<EnergyPool>): boolean => {
-  for (const el of Object.keys(cost) as Array<Elemental>) {
-    //if it's less than what's required, it can't be paid
-    if (pool[el] < cost[el]!) return false
-  }
-  //if we make it here, it's payable
-  return true
+  return pipe(
+    D.keys(cost),
+    A.every(el => pool[el] >= cost[el]!),
+  )
 }
 
 export const spendEnergy = (pool: EnergyPool, cost: Partial<EnergyPool>): EnergyPool => {
   //if we don't have enough, error
   if (!canSpendEnergy(pool, cost)) throw new Error(`GAME ERROR: Trying to spend ${JSON.stringify(cost)} but pool only has ${JSON.stringify(pool)}!`)
-  //kinda dumb
-  let newPool = {...pool}
-  for (const el of Object.keys(cost) as Array<Elemental>) {
-    newPool[el] -= cost[el]!
-  }
-  return newPool
+  return pipe(
+    pool,
+    D.mapWithKey((key, val) => 
+      (val - (cost[key] ?? 0))
+    )
+  )
 }
 
 export const canUseAbility = (ctx: AbilityUsageContext): boolean => {
-  //first check usage limits
   const ability = ctx.thisAbility
-  if (ability.limit !== "Unlimited") {
-    if (ctx.thisCard.abilityUsages[ability.name] >= ability.limit) return false
-  }
-  //check if it's in the right zone
-  if (ability.fromZone !== "Any") {
-    if (ability.fromZone !== getZoneOfCard(ctx.gameState, ctx.thisCard.id)) return false
-  }
-  //now do state check
-  if (ability.stateCheck) {
-    if (!ability.stateCheck(ctx)) return false
-  }
-  //now check for energy in pool
-  if (!canSpendEnergy(ctx.gameState.energyPool, ctx.thisAbility.energyCost)) return false
-  //todo: maybe preliminary selection checks, to ensure we can meet the minimum amount
-  return true
+  const card = ctx.thisCard
+  const gs = ctx.gameState
+  return A.all(
+    [
+      //first check usage limits
+      () => ability.limit === "Unlimited" ||
+            card.abilityUsages[ability.name] < ability.limit,
+      //check if it's in the right zone
+      () => ability.fromZone === "Any" ||
+            ability.fromZone === getZoneOfCard(gs, card.id),
+      //now do state check, if there is one
+      () => !ability.stateCheck || ability.stateCheck(ctx),
+      //make sure there's enough energy in pool
+      () => canSpendEnergy(gs.energyPool, ability.energyCost)
+      //todo: maybe preliminary selection checks, to ensure we can meet the minimum amount
+    ], (check => check())
+  )
 }
 
 export const applyAbility = (ctx: AbilityUsageContext, selections: Selections): GameState => {
-  //todo: this function feels very gunky, i miss clojure arrow operators...
-  const stateWithEffect = (ctx.thisAbility.effect) ? ctx.thisAbility.effect(ctx, selections) : ctx.gameState
-  const stateWithMovedCard = (ctx.thisAbility.toZone) ? moveCardToZone(stateWithEffect, ctx.thisCard.id, ctx.thisAbility.toZone) : stateWithEffect
-  const stateWithEnergyUpdated = {
-    ...stateWithMovedCard,
-    energyPool: spendEnergy(stateWithEffect.energyPool, ctx.thisAbility.energyCost)
-  }
-  const stateWithMove = {...stateWithEnergyUpdated, moves: ctx.gameState.moves + 1}
-  //we need to re-get the card instance because it may have been updated by the effect
-  const card = getCardById(stateWithMove, ctx.thisCard.id) 
-  const newUsages = card.abilityUsages[ctx.thisAbility.name] + 1
-  const stateWithUsage = mutateCard(stateWithMove, card.id, {
-    abilityUsages: {
-      ...card.abilityUsages,
-      [ctx.thisAbility.name]: newUsages
+  const ability = ctx.thisAbility
+  const card = ctx.thisCard
+  return pipe(
+    ctx.gameState,
+    //apply effect, if present
+    gs => ability.effect ? ability.effect(ctx, selections) : gs,
+    //move card, if ability has toZone
+    gs => ability.toZone ? moveCardToZone(gs, card.id, ability.toZone) : gs,
+    //update energy pool
+    gs => ({
+      ...gs,
+      energyPool: spendEnergy(gs.energyPool, ability.energyCost)
+    }),
+    //increment moves
+    gs => ({
+      ...gs,
+      moves: gs.moves+1
+    }),
+    //mutate card with ability usage
+    gs => {
+      //we have to re-get the card because the card may have been mutated by its effect
+      const updatedCard = getCardById(gs, card.id) 
+      const newUsages = updatedCard.abilityUsages[ability.name] + 1
+      return mutateCard(gs, updatedCard.id, {
+        abilityUsages: {
+          ...updatedCard.abilityUsages,
+          [ability.name]: newUsages
+        }
+      })
     }
-  })
-  return stateWithUsage
+  )
 }
 
 // --------------- Triggers --------------- //
