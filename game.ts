@@ -44,16 +44,11 @@ export type GameState = {
 }
 
 const makeEmptyEnergyPool = (): EnergyPool => {
-  return {
-    "Holy": 0,
-    "Fire": 0,
-    "Stone": 0,
-    "Thunder": 0,
-    "Plant": 0,
-    "Wind": 0,
-    "Water": 0,
-    "Dark": 0
-  }
+  return pipe(
+    ALL_ELEMENTS,
+    A.map(el => [el, 0] as const),
+    D.fromPairs
+  ) as EnergyPool
 }
 
 export const initGameState = (decklist: CardDefinition[]): GameState => {
@@ -261,6 +256,7 @@ export const applyAbility = (ctx: AbilityUsageContext, selections: Selections): 
     //mutate card with ability usage
     gs => {
       //we have to re-get the card because the card may have been mutated by its effect
+      //i wonder if there's a way to avoid that...
       const updatedCard = getCardById(gs, card.id) 
       const newUsages = updatedCard.abilityUsages[ability.name] + 1
       return mutateCard(gs, updatedCard.id, {
