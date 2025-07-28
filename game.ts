@@ -232,7 +232,7 @@ export const canUseAbility = (ctx: AbilityUsageContext): boolean => {
   return true
 }
 
-export const applyEffect = (ctx: AbilityUsageContext, selections: Selections): GameState => {
+export const applyAbility = (ctx: AbilityUsageContext, selections: Selections): GameState => {
   //todo: this function feels very gunky, i miss clojure arrow operators...
   const stateWithEffect = (ctx.thisAbility.effect) ? ctx.thisAbility.effect(ctx, selections) : ctx.gameState
   const stateWithMovedCard = (ctx.thisAbility.toZone) ? moveCardToZone(stateWithEffect, ctx.thisCard.id, ctx.thisAbility.toZone) : stateWithEffect
@@ -252,3 +252,6 @@ export const applyEffect = (ctx: AbilityUsageContext, selections: Selections): G
   })
   return stateWithUsage
 }
+
+// --------------- Triggers --------------- //
+

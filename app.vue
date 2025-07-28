@@ -84,7 +84,7 @@
 
 <script setup lang="ts">
   import type { GameState, AbilityUsageContext, Elemental, CardInstance, Ability, SelectionCriteria, Selections  } from './game';
-  import { initGameState, spawnCardTo, canUseAbility, applyEffect } from './game';
+  import { initGameState, spawnCardTo, canUseAbility, applyAbility } from './game';
   import { superFallingStar, sunRiser, bennyTheBouncer, weirdoTrain, varna } from "./cards";
 
   const decklist = [
@@ -145,7 +145,7 @@
       interfaceState.value = {mode: "Choosing Selections", ctx, criteria}
     } else {
       //no selections needed, do eff
-      gameState.value = applyEffect(ctx, {})
+      gameState.value = applyAbility(ctx, {})
       endAbility()
     }
   }
@@ -158,7 +158,7 @@
       element: selectedElement.value || undefined,
       card: selectedCard.value || undefined
     }
-    gameState.value = applyEffect(interfaceState.value.ctx, selections)
+    gameState.value = applyAbility(interfaceState.value.ctx, selections)
     //clear selections & go to standby
     endAbility()
   }
