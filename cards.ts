@@ -1,15 +1,14 @@
 import type { CardDefinition, Ability } from "./game"
-import { moveCardToZone } from "./game"
 
-// --------------- Abilities --------------- //
+// --------------- Helpers --------------- //
 
-export const simpleSummon: Ability = {
+const simpleSummon: Ability = {
   name: "Simple Summon",
-  description: "Moves from hand to field",
-  limit: 1,
-  energyCost: {},
+  description: "Summon this card to the field.",
+  limit: "Unlimited",
   fromZone: "Hand",
-  toZone: "Field"
+  energyCost: {},
+  effects: [{type: "Summon This"}]
 }
 
 // --------------- Cards -------------- //
@@ -24,19 +23,11 @@ export const superFallingStar: CardDefinition = {
     energyCost: {"Stone": 1},
     limit: "Unlimited",
     fromZone: "Hand",
-    toZone: "GY",
     selectionCriteria: {type: "Element", allowedElements: "All"},
-    effect: (ctx, selections) => {
-      const chosenElement = selections.element! //todo: more typesafe way of doing this?
-      //definitely needs an addEnergy() helper
-      return {
-        ...ctx.gameState,
-        energyPool: ctx.gameState.energyPool = {
-          ...ctx.gameState.energyPool,
-          [chosenElement]: ctx.gameState.energyPool[chosenElement] + 1
-        }
-      }
-    }
+    effects: [
+      {type: "Add Selected Energy"},
+      {type: "Move This", to: "GY"}
+    ]
   }]
 }
 
@@ -50,16 +41,14 @@ export const sunRiser: CardDefinition = {
     energyCost: {"Holy": 3},
     limit: "Unlimited",
     fromZone: "Extra",
-    effect: (ctx, _) => {
-      //todo: can make a moveAll() helper function
-      let newGs = {...ctx.gameState}
-      for (const c of ctx.gameState.GY) {
-        if (c.elements.includes("Stone")) {
-          newGs = moveCardToZone(newGs, c.id, "Hand")
-        }
-      }
-      return newGs
-    }
+    effects: [{
+      type: "Move All",
+      to: "Hand",
+      criteria: [
+        {type: "In Zone", zone: "GY"},
+        {type: "Has Element", el: "Stone"}
+      ]
+    }]
   }]
 }
 
@@ -79,9 +68,7 @@ export const bennyTheBouncer: CardDefinition = {
       selfTarget: false,
       cardCriteria: () => true
     },
-    effect: (ctx, selections) => {
-      return moveCardToZone(ctx.gameState, selections.card!.id, "Hand")
-    }
+    effects: [{type: "Move Selected", to: "Hand"}]
   }]
 }
 
