@@ -7,7 +7,6 @@ const simpleSummon: Ability = {
   description: "Summon this card to the field.",
   limit: "Unlimited",
   fromZone: "Hand",
-  energyCost: {},
   effects: [{type: "Summon This"}]
 }
 
@@ -16,16 +15,13 @@ const simpleSummon: Ability = {
 export const superFallingStar: CardDefinition = {
   collectionNumber: 1,
   name: "Super Falling Star",
-  elements: ["Holy", "Stone"],
+  attributes: ["Eggs"],
   abilities: [{
     name: "Chromatic Prism",
-    description: "Gain one energy of any type.",
-    energyCost: {"Stone": 1},
+    description: "Send this to the GY for no reason.",
     limit: "Unlimited",
     fromZone: "Hand",
-    selectionCriteria: {type: "Element", allowedElements: "All"},
     effects: [
-      {type: "Add Selected Energy"},
       {type: "Move This", to: "GY"}
     ]
   }]
@@ -34,11 +30,10 @@ export const superFallingStar: CardDefinition = {
 export const sunRiser: CardDefinition = {
   collectionNumber: 2,
   name: "Sunriser",
-  elements: ["Holy", "Stone"],
+  attributes: ["Eggs"],
   abilities: [{
     name: "Second Sunrise",
-    description: "Return all Stone-type cards from your GY to your Hand.",
-    energyCost: {"Holy": 3},
+    description: "Return all [Eggs] cards from your GY to your Hand.",
     limit: "Unlimited",
     fromZone: "Extra",
     effects: [{
@@ -46,7 +41,7 @@ export const sunRiser: CardDefinition = {
       to: "Hand",
       criteria: [
         {type: "In Zone", zone: "GY"},
-        {type: "Has Element", el: "Stone"}
+        {type: "Has Attribute", attribute: "Eggs"}
       ]
     }]
   }]
@@ -55,11 +50,10 @@ export const sunRiser: CardDefinition = {
 export const bennyTheBouncer: CardDefinition = {
   collectionNumber: -1,
   name: "Benny the Bouncer",
-  elements: ["Dark"],
+  attributes: ["Evil"],
   abilities: [simpleSummon, {
     name: "Get 'em outta here!",
     description: "Move target card from the Field to the Hand.",
-    energyCost: {"Dark": 1},
     limit: "Unlimited",
     fromZone: "Field",
     selectionCriteria: {
@@ -75,13 +69,13 @@ export const bennyTheBouncer: CardDefinition = {
 export const weirdoTrain: CardDefinition = {
   collectionNumber: -2,
   name: "Weirdo Train",
-  elements: ["Fire", "Thunder", "Water"],
+  attributes: ["Magic"],
   abilities: [simpleSummon]
 }
 
 export const varna: CardDefinition = {
   collectionNumber: -3,
   name: "Varna",
-  elements: ["Holy", "Fire", "Stone", "Thunder", "Plant", "Wind", "Water", "Dark"],
+  attributes: ["Magic"],
   abilities: [simpleSummon]
 }

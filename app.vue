@@ -6,6 +6,9 @@
         <p class="text-4xl font-bold text-white">
           {{ interfaceState.card.name }}
         </p>
+        <p class="text-xl text-white italic">
+          {{ interfaceState.card.attributes.join(" / ") }}
+        </p>
         <template v-for="ability of interfaceState.card.abilities" :key="ability.name">
           <article class="border border-4 border-orange-500 rounded-2xl p-1 bg-orange-800/25 transition duration-150"
           :class="canUseAbility({gameState, thisCard: interfaceState.card, thisAbility: ability}) ? 'cursor-pointer hover:border-orange-300' : 'grayscale brightness-50'" 
@@ -13,13 +16,12 @@
             <p class="text-2xl font-bold text-white">
               {{ ability.name }}
             </p>
-            <div class="flex justify-center my-1">
+            <!-- <div class="flex justify-center my-1">
               <ElementalIconList :energy-pool="ability.energyCost" size="1.5em"/>
-            </div>
+            </div> -->
             <p class="text-sm text-stone-300 italic">
               From {{ ability.fromZone }}
               / {{ ability.limit }} per turn
-              {{ ability.toZone ? `/ Sends to ${ability.toZone}` : "" }}
             </p>
             <p class="text-lg text-white">
               {{ ability.description }}
@@ -62,7 +64,7 @@
       <p class="text-4xl font-bold text-white text-center">
         Energy Pool
       </p>
-      <ElementalIconList :energy-pool="gameState.energyPool" size="2em" class="mt-3 flex-wrap justify-center"/>
+      <!-- <ElementalIconList :energy-pool="gameState.energyPool" size="2em" class="mt-3 flex-wrap justify-center"/> -->
     </div>
 
     <!-- Selection Chooser -->
@@ -70,8 +72,9 @@
       <div class="w-128 absolute top-[20vh] right-[25vw] w-[50vw] h-[50vh] bg-blue-200 overflow-y-scroll border border-black">
         <!-- Choosing Elements -->
         <button class="bg-red-400 p-2 rounded-md" @click="endAbility">Cancel</button>
-        <div v-if="interfaceState.criteria.type === 'Element'">
-          <ElementSelector :criteria="interfaceState.criteria" v-model="selectedElement"/>
+        <div v-if="interfaceState.criteria.type === 'Attribute'">
+          <p>(todo)</p>
+          <!-- <ElementSelector :criteria="interfaceState.criteria" v-model="selectedAttribute"/> -->
         </div>
         <div v-else-if="interfaceState.criteria.type === 'Card'">
           <CardSelector :criteria="interfaceState.criteria" :ctx="interfaceState.ctx" v-model="selectedCard"/>
@@ -83,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-  import type { GameState, AbilityUsageContext, Elemental, CardInstance, Ability, SelectionCriteria, Selections  } from './game';
+  import type { GameState, AbilityUsageContext, Attribute, CardInstance, Ability, SelectionCriteria, Selections  } from './game';
   import { initGameState, spawnCardTo, canUseAbility, applyAbility } from './game';
   import { superFallingStar, sunRiser, bennyTheBouncer, weirdoTrain, varna } from "./cards";
 
@@ -100,16 +103,10 @@
   ]
 
   const gameState: Ref<GameState> = ref(initGameState(decklist))
-  //cheat in some energy
-  gameState.value.energyPool = {
-    ...gameState.value.energyPool,
-    "Holy": 3,
-    "Stone": 10
-  }
   //add some starting extras
   gameState.value = spawnCardTo(gameState.value, sunRiser, "Extra")
 
-  const selectedElement: Ref<Elemental|null> = ref(null)
+  const selectedAttribute: Ref<Attribute|null> = ref(null)
   const selectedCard: Ref<CardInstance|null> = ref(null)
 
   type InterfaceState = {
@@ -155,7 +152,7 @@
       throw new Error("UI ERROR: calling confirmAbilityWithSelections() while not in Choosing Selections state")
     }
     const selections: Selections = {
-      element: selectedElement.value || undefined,
+      attribute: selectedAttribute.value || undefined,
       card: selectedCard.value || undefined
     }
     gameState.value = applyAbility(interfaceState.value.ctx, selections)
@@ -164,7 +161,7 @@
   }
 
   const endAbility = () => {
-    selectedElement.value = null
+    selectedAttribute.value = null
     selectedCard.value = null
     interfaceState.value = {mode: "Standby"}
   }

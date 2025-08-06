@@ -5,10 +5,11 @@ import { inPlaceShuffle } from "./utils"
 
 // --------------- Game Constants --------------- //
 
-export const ALL_ELEMENTS = ["Holy", "Fire", "Stone", "Thunder", "Plant", "Wind", "Water", "Dark"] as const
-export type Elemental = typeof ALL_ELEMENTS[number]
+export const ALL_ATTRIBUTES = ["Qli-Left", "Qli-Right", "Magic", "Evil", "Eggs"] as const
+export type Attribute = typeof ALL_ATTRIBUTES[number]
 
-export type EnergyPool = {[key in Elemental]: number}
+export const ALL_ITEMS = ["Yellow Key", "Blue Key", "Red Key"] as const
+export type Item = typeof ALL_ATTRIBUTES[number]
 
 export const ALL_ZONES = ["Deck", "Hand", "Field", "Extra", "GY", "Removed"] as const
 export type Zone = typeof ALL_ZONES[number]
@@ -18,7 +19,7 @@ export type Zone = typeof ALL_ZONES[number]
 export type CardDefinition = {
   collectionNumber: number
   name: string
-  elements: Elemental[]
+  attributes: Attribute[]
   abilities: Ability[]
   // power: number
   // maxPower: number | "Unlimited"
@@ -40,15 +41,7 @@ export type GameState = {
   Extra: CardInstance[]
   GY: CardInstance[]
   Removed: CardInstance[]
-  energyPool: EnergyPool
-}
-
-const makeEmptyEnergyPool = (): EnergyPool => {
-  return pipe(
-    ALL_ELEMENTS,
-    A.map(el => [el, 0] as const),
-    D.fromPairs
-  ) as EnergyPool
+  items: Item[]
 }
 
 export const initGameState = (decklist: CardDefinition[]): GameState => {
@@ -66,7 +59,7 @@ export const initGameState = (decklist: CardDefinition[]): GameState => {
     Extra: [],
     GY: [],
     Removed: [],
-    energyPool: makeEmptyEnergyPool(),
+    items: [],
   }
   //draw 5
   return pipe(
@@ -143,8 +136,8 @@ export const checkSingleCriteria = (gs: GameState, card: CardInstance, criteria:
   switch (criteria.type) {
     case "In Zone":
       return getZoneOfCard(gs, card.id) === criteria.zone
-    case "Has Element":
-      return card.elements.includes(criteria.el)
+    case "Has Attribute":
+      return card.attributes.includes(criteria.attribute)
   }
 }
 
@@ -192,14 +185,14 @@ export type EffectUnit = {type: "Summon This"} //todo: attribute materials
   | {type: "Move This", to: Zone} 
   | {type: "Move Selected", to: Zone} 
   | {type: "Move All", criteria: CardCriteria[], to: Zone}
-  | {type: "Add One Energy", el: Elemental}
-  | {type: "Add Selected Energy"}
-  //| {type: "Add Many Energy", pool: Partial<EnergyPool>} 
-  //| {type: "Remove Many Energy", pool: Partial<EnergyPool>} //i wonder if it makes sense to use this for ability activation costs, or if that should be separate?
+  // | {type: "Add One Energy", attribute: Attribute}
+  // | {type: "Add Selected Energy"}
+  // | {type: "Add Many Energy", pool: Partial<EnergyPool>} 
+  // | {type: "Remove Many Energy", pool: Partial<EnergyPool>} //i wonder if it makes sense to use this for ability activation costs, or if that should be separate?
 //todo: mutations and card spawning
 
 export type CardCriteria = {type: "In Zone", zone: Zone}
-  | {type: "Has Element", el: Elemental}
+  | {type: "Has Attribute", attribute: Attribute}
   //| {type: "NOT", criteria: CardCriteria}
   //| {type: "NONE", criteria: CardCriteria[]}
   //| {type: "ANY", criteria: CardCriteria[]}
@@ -208,7 +201,6 @@ export type CardCriteria = {type: "In Zone", zone: Zone}
 export type Ability = {
   name: string
   description: string
-  energyCost: Partial<EnergyPool> //todo: any energy, doubling costs, etc
   limit: number | "Unlimited"
   fromZone: Zone | "Any"
   selectionCriteria?: SelectionCriteria //[] | ((ctx: AbilityUsageContext) => SelectionCriteria[])
@@ -222,7 +214,7 @@ export type AbilityUsageContext = {
   thisAbility: Ability
 }
 
-export type SelectionCriteria = CardSelectionCriteria | ElementalSelectionCriteria
+export type SelectionCriteria = CardSelectionCriteria | AttributeSelectionCriteria
 
 export type CardSelectionCriteria = {
   //todo: roll CardCriteria into this
@@ -232,36 +224,14 @@ export type CardSelectionCriteria = {
   cardCriteria: (card: CardInstance) => boolean
 }
 
-export type ElementalSelectionCriteria = {
-  type: "Element"
-  allowedElements: "All" | Elemental[]
+export type AttributeSelectionCriteria = {
+  type: "Attribute"
+  allowedAttributes: Attribute[]
 }
 
 export type Selections = {
   card?: CardInstance
-  element?: Elemental
-}
-
-export const canSpendEnergy = (pool: EnergyPool, cost: Partial<EnergyPool>): boolean => {
-  return pipe(
-    D.keys(cost),
-    A.every(el => pool[el] >= cost[el]!),
-  )
-}
-
-export const spendEnergy = (pool: EnergyPool, cost: Partial<EnergyPool>): EnergyPool => {
-  //if we don't have enough, error
-  if (!canSpendEnergy(pool, cost)) throw new Error(`GAME ERROR: Trying to spend ${JSON.stringify(cost)} but pool only has ${JSON.stringify(pool)}!`)
-  return pipe(
-    pool,
-    D.mapWithKey((key, val) => 
-      (val - (cost[key] ?? 0))
-    )
-  )
-}
-
-export const addEnergy = (pool: EnergyPool, add: Partial<EnergyPool>): EnergyPool => {
-  return D.mapWithKey(pool, (k, v) => v + (add[k] ?? 0))
+  attribute?: Attribute
 }
 
 export const canUseAbility = (ctx: AbilityUsageContext): boolean => {
@@ -278,8 +248,6 @@ export const canUseAbility = (ctx: AbilityUsageContext): boolean => {
             ability.fromZone === getZoneOfCard(gs, card.id),
       //now do state check, if there is one
       () => !ability.stateCheck || ability.stateCheck(ctx),
-      //make sure there's enough energy in pool
-      () => canSpendEnergy(gs.energyPool, ability.energyCost)
       //todo: maybe preliminary selection checks, to ensure we can meet the minimum amount
     ], (check => check())
   )
@@ -298,23 +266,6 @@ export const applyEffectUnit = (ctx: AbilityUsageContext, eff: EffectUnit, selec
       return moveCardToZone(gs, selections.card!.id, eff.to)
     case "Move All":
       return moveCardsByCriteria(gs, eff.criteria, eff.to)
-    case "Add One Energy":
-      //todo: addOneEnergy(), or maybe addOneItem()
-      return {
-        ...gs,
-        energyPool: {
-          ...gs.energyPool,
-          [eff.el]: gs.energyPool[eff.el] + 1
-        }
-      }
-    case "Add Selected Energy":
-      return {
-        ...gs,
-        energyPool: {
-          ...gs.energyPool,
-          [selections.element!]: gs.energyPool[selections.element!] + 1
-        }
-      }
   }
 }
 
@@ -327,12 +278,8 @@ export const applyAbility = (ctx: AbilityUsageContext, selections: Selections): 
     gs => ability.effects.reduce(
       (tempGs, eff) => applyEffectUnit({...ctx, gameState: tempGs}, eff, selections), 
       gs),
-    //update energy pool & increment moves
-    gs => ({
-      ...gs,
-      energyPool: spendEnergy(gs.energyPool, ability.energyCost),
-      moves: gs.moves+1
-    }),
+    //increment moves
+    gs => ({...gs, moves: gs.moves+1}),
     //mutate card with ability usage
     gs => {
       //we have to re-get the card because the card may have been mutated by its effect
