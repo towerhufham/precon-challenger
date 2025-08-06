@@ -21,6 +21,7 @@ export type CardDefinition = {
   name: string
   attributes: Attribute[]
   abilities: Ability[]
+  color: string
   // power: number
   // maxPower: number | "Unlimited"
 }
