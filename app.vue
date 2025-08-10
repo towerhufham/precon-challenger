@@ -16,9 +16,6 @@
             <p class="text-2xl font-bold text-white">
               {{ ability.name }}
             </p>
-            <!-- <div class="flex justify-center my-1">
-              <ElementalIconList :energy-pool="ability.energyCost" size="1.5em"/>
-            </div> -->
             <p class="text-sm text-stone-300 italic">
               From {{ ability.fromZone }}
               / {{ ability.limit }} per turn
@@ -38,33 +35,43 @@
     </div>
 
     <!-- Center panel -->
-    <div class="flex-grow grid grid-rows-3 h-screen overflow-auto green-grid-bg">
-      <!-- Upper third -->
-      <div class="flex justify-center items-center gap-2 bg-black/10">
+    <div class="flex-grow grid grid-rows-[3fr_1fr] grid-cols-[1fr_4fr_1fr] h-screen overflow-auto green-grid-bg">
+      <!-- Extra -->
+      <div class="flex flex-col items-center bg-black/10 stacked-pile">
         <template v-for="card of gameState.Extra" :key="card.id">
           <Card :card @click="cardClickHandler(card)"/>
         </template>
       </div>
-      <!-- Middle third -->
+      <!-- Field  -->
       <div class="flex justify-center items-center gap-2">
         <template v-for="card of gameState.Field" :key="card.id">
           <Card :card @click="cardClickHandler(card)"/>
         </template>
       </div>
-      <!-- Lower third -->
+      <!-- GY -->
+      <div class="flex flex-col items-center bg-black/10 stacked-pile">
+        <template v-for="card of gameState.GY" :key="card.id">
+          <Card :card @click="cardClickHandler(card)"/>
+        </template>
+      </div>
+      <!-- Extra Number? -->
+      <div class="flex justify-center items-center">
+        <p class="text-6xl text-white font-bold">{{ gameState.Extra.length }}</p>
+      </div>
+      <!-- Hand -->
       <div class="flex justify-center items-center gap-2 bg-black/10">
         <template v-for="card of gameState.Hand" :key="card.id">
           <Card :card @click="cardClickHandler(card)"/>
         </template>
       </div>
+      <!-- Deck -->
+      <div class="flex justify-center items-center">
+        <p class="text-6xl text-white font-bold">{{ gameState.Deck.length }}</p>
+      </div>
     </div>
 
     <!-- Right panel -->
     <div class="flex flex-col h-screen w-[350px] overflow-hidden orange-grid-bg border border-8 border-orange-600 p-3">
-      <p class="text-4xl font-bold text-white text-center">
-        Energy Pool
-      </p>
-      <!-- <ElementalIconList :energy-pool="gameState.energyPool" size="2em" class="mt-3 flex-wrap justify-center"/> -->
     </div>
 
     <!-- Selection Chooser -->
@@ -184,5 +191,9 @@
     background-image:
       linear-gradient(to right, var(--grid-color) 2px, transparent 2px),
       linear-gradient(to bottom, var(--grid-color) 2px, transparent 2px);
+  }
+
+  .stacked-pile > *:not(:first-child) {
+    margin-top: -150px;
   }
 </style>
