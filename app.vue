@@ -37,7 +37,7 @@
     <!-- Center panel -->
     <div class="flex-grow grid grid-rows-[3fr_1fr] grid-cols-[1fr_4fr_1fr] h-screen overflow-auto green-grid-bg">
       <!-- Extra -->
-      <div class="flex flex-col items-center bg-black/10 stacked-pile">
+      <div class="flex flex-col items-center bg-black/10 p-2 stacked-pile">
         <template v-for="card of gameState.Extra" :key="card.id">
           <Card :card @click="cardClickHandler(card)"/>
         </template>
@@ -49,7 +49,7 @@
         </template>
       </div>
       <!-- GY -->
-      <div class="flex flex-col items-center bg-black/10 stacked-pile">
+      <div class="flex flex-col items-center bg-black/10 p-2 stacked-pile">
         <template v-for="card of gameState.GY" :key="card.id">
           <Card :card @click="cardClickHandler(card)"/>
         </template>

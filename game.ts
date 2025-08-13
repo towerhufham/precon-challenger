@@ -93,7 +93,20 @@ export const spawnCardTo = (gs: GameState, definition: CardDefinition, to: Zone)
 
 export const drawCard = (gs: GameState): GameState => {
   return pipe(
-    A.head(gs.Deck),
+    gs.Deck,
+    A.head,
+    O.match(
+      card => moveCardToZone(gs, card.id, "Hand"),
+      () => gs
+    )
+  )
+}
+
+export const drawCardByCriteria = (gs: GameState, criteria: CardCriteria[]): GameState => {
+  return pipe(
+    gs.Deck,
+    A.filter(c => checkCriteria(gs, c, criteria)),
+    A.head,
     O.match(
       card => moveCardToZone(gs, card.id, "Hand"),
       () => gs
@@ -139,6 +152,8 @@ export const checkSingleCriteria = (gs: GameState, card: CardInstance, criteria:
       return getZoneOfCard(gs, card.id) === criteria.zone
     case "Has Attribute":
       return card.attributes.includes(criteria.attribute)
+    default:
+      throw criteria satisfies never
   }
 }
 
@@ -186,10 +201,8 @@ export type EffectUnit = {type: "Summon This"} //todo: attribute materials
   | {type: "Move This", to: Zone} 
   | {type: "Move Selected", to: Zone} 
   | {type: "Move All", criteria: CardCriteria[], to: Zone}
-  // | {type: "Add One Energy", attribute: Attribute}
-  // | {type: "Add Selected Energy"}
-  // | {type: "Add Many Energy", pool: Partial<EnergyPool>} 
-  // | {type: "Remove Many Energy", pool: Partial<EnergyPool>} //i wonder if it makes sense to use this for ability activation costs, or if that should be separate?
+  | {type: "Draw"}
+  | {type: "Draw by Criteria", criteria: CardCriteria[]}
 //todo: mutations and card spawning
 
 export type CardCriteria = {type: "In Zone", zone: Zone}
@@ -257,7 +270,6 @@ export const canUseAbility = (ctx: AbilityUsageContext): boolean => {
 export const applyEffectUnit = (ctx: AbilityUsageContext, eff: EffectUnit, selections: Selections): GameState => {
   const gs = ctx.gameState
   const card = ctx.thisCard
-  //const selections = ???
   switch (eff.type) {
     case "Summon This":
       return moveCardToZone(gs, card.id, "Field")
@@ -267,6 +279,12 @@ export const applyEffectUnit = (ctx: AbilityUsageContext, eff: EffectUnit, selec
       return moveCardToZone(gs, selections.card!.id, eff.to)
     case "Move All":
       return moveCardsByCriteria(gs, eff.criteria, eff.to)
+    case "Draw":
+      return drawCard(gs)
+    case "Draw by Criteria":
+      return drawCardByCriteria(gs, eff.criteria)
+    default:
+      throw eff satisfies never
   }
 }
 

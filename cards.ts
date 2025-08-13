@@ -19,11 +19,12 @@ export const superFallingStar: CardDefinition = {
   color: "white",
   abilities: [{
     name: "Chromatic Prism",
-    description: "Send this to the GY for no reason.",
+    description: "Send this to the GY to draw 1 [Eggs] card.",
     limit: "Unlimited",
     fromZone: "Hand",
     effects: [
-      {type: "Move This", to: "GY"}
+      {type: "Move This", to: "GY"},
+      {type: "Draw by Criteria", criteria: [{type: "Has Attribute", attribute: "Eggs"}]}
     ]
   }]
 }
