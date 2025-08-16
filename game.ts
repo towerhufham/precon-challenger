@@ -217,7 +217,7 @@ export type Ability = {
   description: string
   limit: number | "Unlimited"
   fromZone: Zone | "Any"
-  selectionCriteria?: SelectionCriteria //[] | ((ctx: AbilityUsageContext) => SelectionCriteria[])
+  selectionCriteria?: CardCriteria[]
   stateCheck?: (ctx: AbilityUsageContext) => boolean
   effects: EffectUnit[]
 }
@@ -226,21 +226,6 @@ export type AbilityUsageContext = {
   gameState: GameState
   thisCard: CardInstance
   thisAbility: Ability
-}
-
-export type SelectionCriteria = CardSelectionCriteria | AttributeSelectionCriteria
-
-export type CardSelectionCriteria = {
-  //todo: roll CardCriteria into this
-  type: "Card"
-  zones: Zone[]
-  selfTarget: boolean
-  cardCriteria: (card: CardInstance) => boolean
-}
-
-export type AttributeSelectionCriteria = {
-  type: "Attribute"
-  allowedAttributes: Attribute[]
 }
 
 export type Selections = {
@@ -314,12 +299,3 @@ export const applyAbility = (ctx: AbilityUsageContext, selections: Selections): 
     }
   )
 }
-
-//I think now that cards should be completely functionless and just be flat values
-//That makes writing the abilities easier, as well as handling the logic easier
-//Also, global/named/level-having abilities is a good idea, I think (could also probably merge Ability and Trigger in that case)
-//Elements -> Attributes
-//Summoning (or spells) based on Attribute sacrifice should be coded into the game as a mechanic (and sending to field is different)
-//Conversely, that means being tributed is also a mechanic that might have special rules
-//I think this kind of hyper-focusing onto the Quasi-Yugioh style gameplay I imagine is really good for both the game design and the code  
-//Locks instead of ability usages is probably a good idea, also both for design and code (maybe abilities have a lockStyle?)

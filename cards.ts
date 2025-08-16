@@ -60,12 +60,7 @@ export const bennyTheBouncer: CardDefinition = {
     description: "Move target card from the Field to the Hand.",
     limit: "Unlimited",
     fromZone: "Field",
-    selectionCriteria: {
-      type: "Card",
-      zones: ["Field"],
-      selfTarget: false,
-      cardCriteria: () => true
-    },
+    selectionCriteria: [{type: "In Zone", zone: "Field"}],
     effects: [{type: "Move Selected", to: "Hand"}]
   }]
 }

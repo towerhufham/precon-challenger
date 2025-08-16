@@ -77,13 +77,8 @@
     <!-- Selection Chooser -->
     <div v-if="interfaceState.mode === 'Choosing Selections'">
       <div class="w-128 absolute top-[20vh] right-[25vw] w-[50vw] h-[50vh] bg-blue-200 overflow-y-scroll border border-black">
-        <!-- Choosing Elements -->
         <button class="bg-red-400 p-2 rounded-md" @click="endAbility">Cancel</button>
-        <div v-if="interfaceState.criteria.type === 'Attribute'">
-          <p>(todo)</p>
-          <!-- <ElementSelector :criteria="interfaceState.criteria" v-model="selectedAttribute"/> -->
-        </div>
-        <div v-else-if="interfaceState.criteria.type === 'Card'">
+        <div>
           <CardSelector :criteria="interfaceState.criteria" :ctx="interfaceState.ctx" v-model="selectedCard"/>
         </div>
         <button class="bg-blue-400 p-2 rounded-md" @click="confirmAbilityWithSelections">Confirm</button>
@@ -93,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-  import type { GameState, AbilityUsageContext, Attribute, CardInstance, Ability, SelectionCriteria, Selections  } from './game';
+  import type { GameState, AbilityUsageContext, Attribute, CardInstance, Ability, Selections, CardCriteria  } from './game';
   import { initGameState, spawnCardTo, canUseAbility, applyAbility } from './game';
   import { superFallingStar, sunRiser, bennyTheBouncer, weirdoTrain, varna } from "./cards";
 
@@ -124,7 +119,7 @@
   } | {
     mode: "Choosing Selections"
     ctx: AbilityUsageContext,
-    criteria: SelectionCriteria
+    criteria: CardCriteria[]
   }
   const interfaceState: Ref<InterfaceState> = ref({mode: "Standby"})
 
