@@ -72,6 +72,11 @@
 
     <!-- Right panel -->
     <div class="flex flex-col h-screen w-[350px] overflow-hidden orange-grid-bg border border-8 border-orange-600 p-3">
+      <ul class="text-white italic text-md">
+        <li v-for="log of gameState.logs">
+          Moved (id #{{ log.id }}) from {{ log.from }} to {{ log.to }}
+        </li>
+      </ul>
     </div>
 
     <!-- Selection Chooser -->

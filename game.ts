@@ -333,7 +333,7 @@ export const applyAbility = (ctx: AbilityUsageContext, selections: Selections): 
     //mutate card with ability usage
     gs => {
       //we have to re-get the card because the card may have been mutated by its effect
-      //i wonder if there's a way to avoid that...
+      //this is because this function threads the gamestate, but *not* the original ctx object!
       const updatedCard = getCardById(gs, card.id) 
       const newUsages = updatedCard.abilityUsages[ability.name] + 1
       return mutateCard(gs, updatedCard.id, {
