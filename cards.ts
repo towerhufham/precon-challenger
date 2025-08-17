@@ -5,6 +5,7 @@ import type { CardDefinition, Ability } from "./game"
 const simpleSummon: Ability = {
   name: "Simple Summon",
   description: "Summon this card to the field.",
+  category: {type: "Activated"},
   limit: "Unlimited",
   fromZone: "Hand",
   effects: [{type: "Summon This"}]
@@ -19,11 +20,20 @@ export const superFallingStar: CardDefinition = {
   color: "white",
   abilities: [{
     name: "Chromatic Prism",
-    description: "Send this to the GY to draw 1 [Eggs] card.",
+    description: "Send this to the GY.",
+    category: {type: "Activated"},
     limit: "Unlimited",
     fromZone: "Hand",
     effects: [
       {type: "Move This", to: "GY"},
+    ]
+  }, {
+    name: "Shine",
+    description: "When this card is sent to the GY, draw 1 [Eggs] card.",
+    category: {type: "Triggered", to: "GY"},
+    limit: "Unlimited",
+    fromZone: "Any",
+    effects: [
       {type: "Draw by Criteria", criteria: [{type: "Has Attribute", attribute: "Eggs"}]}
     ]
   }]
@@ -37,6 +47,7 @@ export const sunRiser: CardDefinition = {
   abilities: [{
     name: "Second Sunrise",
     description: "Return all [Eggs] cards from your GY to your Hand.",
+    category: {type: "Activated"},
     limit: "Unlimited",
     fromZone: "Extra",
     effects: [{
@@ -58,6 +69,7 @@ export const bennyTheBouncer: CardDefinition = {
   abilities: [simpleSummon, {
     name: "Get 'em outta here!",
     description: "Move target card from the Field to the Hand.",
+    category: {type: "Activated"},
     limit: "Unlimited",
     fromZone: "Field",
     selectionCriteria: [{type: "In Zone", zone: "Field"}],

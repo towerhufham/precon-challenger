@@ -93,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-  import type { GameState, AbilityUsageContext, Attribute, CardInstance, Ability, Selections, CardCriteria  } from './game';
+  import type { GameState, AbilityContext, Attribute, CardInstance, Ability, Selections, CardCriteria  } from './game';
   import { initGameState, spawnCardTo, canUseAbility, applyAbility } from './game';
   import { superFallingStar, sunRiser, bennyTheBouncer, weirdoTrain, varna } from "./cards";
 
@@ -123,7 +123,7 @@
     card: CardInstance
   } | {
     mode: "Choosing Selections"
-    ctx: AbilityUsageContext,
+    ctx: AbilityContext,
     criteria: CardCriteria[]
   }
   const interfaceState: Ref<InterfaceState> = ref({mode: "Standby"})
