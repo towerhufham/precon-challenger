@@ -9,7 +9,7 @@ export const ALL_ATTRIBUTES = ["Qli-Left", "Qli-Right", "Magic", "Evil", "Eggs",
 export type Attribute = typeof ALL_ATTRIBUTES[number]
 
 export const ALL_ITEMS = ["Yellow Key", "Blue Key", "Red Key"] as const
-export type Item = typeof ALL_ATTRIBUTES[number]
+export type Item = typeof ALL_ITEMS[number]
 
 export const ALL_ZONES = ["Deck", "Hand", "Field", "Extra", "GY", "Removed"] as const
 export type Zone = typeof ALL_ZONES[number]
@@ -22,8 +22,6 @@ export type CardDefinition = {
   attributes: Attribute[]
   abilities: Ability[]
   color: string
-  // power: number
-  // maxPower: number | "Unlimited"
 }
 
 export type CardInstance = CardDefinition & {
@@ -195,6 +193,7 @@ export const mutateCard = (gs: GameState, id: number, mutations: Partial<CardIns
 // --------------- Abilities --------------- //
 
 export type EffectUnit = {type: "Summon This"} //todo: attribute materials
+export type EffectUnit = {type: "Summon This"}
   | {type: "Move This", to: Zone} 
   | {type: "Move Selected", to: Zone} 
   | {type: "Move All", criteria: CardCriteria[], to: Zone}
@@ -289,6 +288,7 @@ export const reifyEffectUnit = (ctx: AbilityContext, eff: EffectUnit, selections
       A.map(t => ({type: "Move" as const, id: t.id, from: getZoneOfCard(gs, t.id), to: eff.to}))
     )]
   } else if (eff.type === "Draw") {
+    //TODO: draw/mill problem described below
     return pipe(
       gs.Deck,
       A.head,
@@ -298,7 +298,7 @@ export const reifyEffectUnit = (ctx: AbilityContext, eff: EffectUnit, selections
       )
     )
   } else if (eff.type === "Draw by Criteria") {
-    //TODO: shuffle deck afterwards!
+    //TODO: draw/mill problem described below
     return pipe(
       gs.Deck,
       A.filter(c => checkCriteria(gs, c, eff.criteria)),
@@ -309,6 +309,7 @@ export const reifyEffectUnit = (ctx: AbilityContext, eff: EffectUnit, selections
       )
     )
   } else if (eff.type === "Mill") {
+    //TODO: draw/mill problem described below
     return pipe(
       gs.Deck,
       A.head,
@@ -318,7 +319,7 @@ export const reifyEffectUnit = (ctx: AbilityContext, eff: EffectUnit, selections
       )
     )
   } else if (eff.type === "Mill by Criteria") {
-    //TODO: shuffle deck afterwards!
+    //TODO: draw/mill problem described below
     return pipe(
       gs.Deck,
       A.filter(c => checkCriteria(gs, c, eff.criteria)),
@@ -349,15 +350,15 @@ export const applyLog = (gs: GameState, log: Log): GameState => {
 }
 
 export const applyLogs = (gs: GameState, logs: Log[]): GameState => {
-  //todo, might be where trigger chaining logic is held
   return logs.reduce((tempGs, log) => applyLog(tempGs, log), gs)
 }
 
-//TODO: PROBLEM!
+//TODO: DRAW/MILL PROBLEM!
 //reifying the effects in a batch doesn't work right!
 //for instance, the triple mill cards don't actually move cards until it builds the logs
 //which means it will make 3 logs for the exact same id to move; because the draw/mill functions-
 //don't actually update the topdeck card!
+
 export const applyAbility = (ctx: AbilityContext, selections: Selections): GameState => {
   const ability = ctx.thisAbility
   const card = ctx.thisCard
