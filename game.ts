@@ -193,7 +193,6 @@ export const mutateCard = (gs: GameState, id: number, mutations: Partial<CardIns
 // --------------- Abilities --------------- //
 
 export type EffectUnit = {type: "Summon This"} //todo: attribute materials
-export type EffectUnit = {type: "Summon This"}
   | {type: "Move This", to: Zone} 
   | {type: "Move Selected", to: Zone} 
   | {type: "Move All", criteria: CardCriteria[], to: Zone}
