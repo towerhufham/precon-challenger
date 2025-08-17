@@ -94,24 +94,27 @@
 
 <script setup lang="ts">
   import type { GameState, AbilityContext, Attribute, CardInstance, Ability, Selections, CardCriteria  } from './game';
-  import { initGameState, spawnCardTo, canUseAbility, applyAbility } from './game';
-  import { superFallingStar, sunRiser, bennyTheBouncer, weirdoTrain, varna } from "./cards";
+  import { initGameState, canUseAbility, applyAbility } from './game';
+  import { keldo, agido, havnis, merrli, scheiren, reinoheart } from "./cards";
 
   const decklist = [
-    {...superFallingStar},
-    {...superFallingStar},
-    {...superFallingStar},
-    {...superFallingStar},
-    {...bennyTheBouncer},
-    {...bennyTheBouncer},
-    {...bennyTheBouncer},
-    {...weirdoTrain},
-    {...varna}
+    {...keldo},
+    {...keldo},
+    {...agido},
+    {...agido},
+    {...havnis},
+    {...havnis},
+    {...merrli},
+    {...merrli},
+    {...scheiren},
+    {...scheiren},
+    {...reinoheart},
+    {...reinoheart},
   ]
 
   const gameState: Ref<GameState> = ref(initGameState(decklist))
   //add some starting extras
-  gameState.value = spawnCardTo(gameState.value, sunRiser, "Extra")
+  // gameState.value = spawnCardTo(gameState.value, sunRiser, "Extra")
 
   const selectedAttribute: Ref<Attribute|null> = ref(null)
   const selectedCard: Ref<CardInstance|null> = ref(null)

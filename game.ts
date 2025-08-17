@@ -5,7 +5,7 @@ import { inPlaceShuffle } from "./utils"
 
 // --------------- Game Constants --------------- //
 
-export const ALL_ATTRIBUTES = ["Qli-Left", "Qli-Right", "Magic", "Evil", "Eggs"] as const
+export const ALL_ATTRIBUTES = ["Qli-Left", "Qli-Right", "Magic", "Evil", "Eggs", "Pyramidas", "Tears"] as const
 export type Attribute = typeof ALL_ATTRIBUTES[number]
 
 export const ALL_ITEMS = ["Yellow Key", "Blue Key", "Red Key"] as const
@@ -200,6 +200,8 @@ export type EffectUnit = {type: "Summon This"} //todo: attribute materials
   | {type: "Move All", criteria: CardCriteria[], to: Zone}
   | {type: "Draw"}
   | {type: "Draw by Criteria", criteria: CardCriteria[]}
+  | {type: "Mill"}
+  | {type: "Mill by Criteria", criteria: CardCriteria[]}
 //todo: mutations and card spawning
 
 export type Log = {
@@ -216,13 +218,14 @@ export type CardCriteria = {type: "In Zone", zone: Zone}
   //| {type: "ANY", criteria: CardCriteria[]}
   //| {type: "ALL", criteria: CardCriteria[]}
 
+//todo: instead of this, should probably have different ability types 
 export type AbilityCategory = {type: "Activated"} //todo: cost?
   | {type: "Triggered", to: Zone, from?: Zone}
 
 export type Ability = {
-  category: AbilityCategory
   name: string
   description: string
+  category: AbilityCategory
   limit: number | "Unlimited"
   fromZone: Zone | "Any"
   selectionCriteria?: CardCriteria[]
@@ -290,7 +293,7 @@ export const reifyEffectUnit = (ctx: AbilityContext, eff: EffectUnit, selections
       gs.Deck,
       A.head,
       O.match(
-        card => [{type: "Move" as const, id: card.id, from: "Deck", to: "Hand"}],
+        card => [{type: "Move", id: card.id, from: "Deck", to: "Hand"}],
         () => []
       )
     )
@@ -301,7 +304,27 @@ export const reifyEffectUnit = (ctx: AbilityContext, eff: EffectUnit, selections
       A.filter(c => checkCriteria(gs, c, eff.criteria)),
       A.head,
       O.match(
-        card => [{type: "Move" as const, id: card.id, from: "Deck", to: "Hand"}],
+        card => [{type: "Move", id: card.id, from: "Deck", to: "Hand"}],
+        () => []
+      )
+    )
+  } else if (eff.type === "Mill") {
+    return pipe(
+      gs.Deck,
+      A.head,
+      O.match(
+        card => [{type: "Move", id: card.id, from: "Deck", to: "GY"}],
+        () => []
+      )
+    )
+  } else if (eff.type === "Mill by Criteria") {
+    //TODO: shuffle deck afterwards!
+    return pipe(
+      gs.Deck,
+      A.filter(c => checkCriteria(gs, c, eff.criteria)),
+      A.head,
+      O.match(
+        card => [{type: "Move", id: card.id, from: "Deck", to: "GY"}],
         () => []
       )
     )
@@ -311,10 +334,12 @@ export const reifyEffectUnit = (ctx: AbilityContext, eff: EffectUnit, selections
 }
 
 export const reifyEffectUnits = (ctx: AbilityContext, effs: EffectUnit[], selection: Selections): Log[] => {
+  console.log(`REIFYING [#${ctx.thisCard.id}]'s ability named "${ctx.thisAbility.name}"`)
   return [...pipe(
     effs,
     A.map(eff => reifyEffectUnit(ctx, eff, selection)),
-    A.flat
+    A.flat,
+    A.tap(l => console.log(JSON.stringify(l)))
   )]
 }
 
@@ -328,6 +353,11 @@ export const applyLogs = (gs: GameState, logs: Log[]): GameState => {
   return logs.reduce((tempGs, log) => applyLog(tempGs, log), gs)
 }
 
+//TODO: PROBLEM!
+//reifying the effects in a batch doesn't work right!
+//for instance, the triple mill cards don't actually move cards until it builds the logs
+//which means it will make 3 logs for the exact same id to move; because the draw/mill functions-
+//don't actually update the topdeck card!
 export const applyAbility = (ctx: AbilityContext, selections: Selections): GameState => {
   const ability = ctx.thisAbility
   const card = ctx.thisCard
@@ -355,7 +385,7 @@ export const applyAbility = (ctx: AbilityContext, selections: Selections): GameS
         }
       })
     },
-    //if any triggers activated, do them recursively (experimental!) 
+    //if any triggers activated, do them recursively
     gs => triggers.reduce(
       (tempGs, [cardId, trig]) => applyAbility({
         gameState: tempGs,
@@ -369,6 +399,7 @@ export const applyAbility = (ctx: AbilityContext, selections: Selections): GameS
 export const getTriggersFromLog = (gs: GameState, log: Log): [number, Ability][] => {
   //right now, only the card that actually moves can activate the trigger
   //todo: handle when a trigger is activated by a *different* card's movement
+  console.log(`COUNTING TRIGGERS...`)
   return [...pipe(
     getCardById(gs, log.id).abilities,
     //not sure why all the category stuff has to be shoved into one A.filter()...
@@ -376,8 +407,10 @@ export const getTriggersFromLog = (gs: GameState, log: Log): [number, Ability][]
                         && ability.category.to === log.to
                         && (ability.category.from ? (ability.category.from === log.from) : true)),
     //todo: activation limits, etc...
+    //should probably be rolled into the ability checks above (or vice versa)
     A.map(trigger => [log.id, trigger] as [number, Ability]),
     // A.tap(pair => {console.log(JSON.stringify(pair))})
+    A.tap(pair => {console.log(`Got trigger from #${pair[0]} with ability named "${pair[1].name}"`)})
   )]
 }
 
