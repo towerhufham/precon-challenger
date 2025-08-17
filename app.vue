@@ -17,7 +17,8 @@
               {{ ability.name }}
             </p>
             <p class="text-sm text-stone-300 italic">
-              From {{ ability.fromZone }}
+              <!-- Todo: make a component for ability bubbles and handle the different cases more elegantly -->
+              <!-- From {{ ability.fromZone }} -->
               / {{ ability.limit }} per turn
             </p>
             <p class="text-lg text-white">
