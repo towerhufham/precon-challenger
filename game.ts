@@ -74,7 +74,7 @@ export const initGameState = (decklist: CardDefinition[]): GameState => {
   )
 }
 
-export const instantiateCard = (definition: CardDefinition, id: number): CardInstance => {
+const instantiateCard = (definition: CardDefinition, id: number): CardInstance => {
   const abilityUsages: {[abilityName: string]: number} = pipe(
     definition.abilities.map(a => [a.name, 0] as const),
     D.fromPairs
@@ -84,7 +84,7 @@ export const instantiateCard = (definition: CardDefinition, id: number): CardIns
   }
 }
 
-// --------------- Game State Getters --------------- ///
+// --------------- Game State Getters --------------- //
 
 export const getAllCards = (gs: GameState): CardInstance[] => {
   return [...pipe(
@@ -122,7 +122,7 @@ export const getZoneOfCard = (gs: GameState, id: number): Zone => {
 
 // --------------- Game State Manipulations --------------- //
 
-export const spawnCardTo = (gs: GameState, definition: CardDefinition, to: Zone): GameState => {
+const spawnCardTo = (gs: GameState, definition: CardDefinition, to: Zone): GameState => {
   return {
     ...gs,
     nextId: gs.nextId + 1,
@@ -130,7 +130,7 @@ export const spawnCardTo = (gs: GameState, definition: CardDefinition, to: Zone)
   }
 }
 
-export const drawCard = (gs: GameState): GameState => {
+const drawCard = (gs: GameState): GameState => {
   return pipe(
     gs.Deck,
     A.head,
@@ -141,7 +141,7 @@ export const drawCard = (gs: GameState): GameState => {
   )
 }
 
-export const drawCardByCriteria = (gs: GameState, criteria: CardCriteria[]): GameState => {
+const drawCardByCriteria = (gs: GameState, criteria: CardCriteria[]): GameState => {
   return pipe(
     gs.Deck,
     A.filter(c => checkCriteria(gs, c, criteria)),
@@ -153,7 +153,7 @@ export const drawCardByCriteria = (gs: GameState, criteria: CardCriteria[]): Gam
   )
 }
 
-export const moveCardToZone = (gs: GameState, id: number, zone: Zone): GameState => {
+const moveCardToZone = (gs: GameState, id: number, zone: Zone): GameState => {
   const oldZone = getZoneOfCard(gs, id)
   return {
     ...gs,
@@ -162,6 +162,7 @@ export const moveCardToZone = (gs: GameState, id: number, zone: Zone): GameState
   }
 }
 
+//todo: don't like this being exported
 export const mutateCard = (gs: GameState, id: number, mutations: Partial<CardInstance>): GameState => {
   //sanity check to make sure the id is not being mutated
   if ("id" in mutations) throw new Error(`GAME ERROR: trying to mutate card with id ${id} into having id ${mutations.id}!`)
@@ -176,6 +177,13 @@ export const mutateCard = (gs: GameState, id: number, mutations: Partial<CardIns
     ...gs,
     [zone]: updatedZone
   }
+}
+
+// ------------- Effect Application --------------- //
+
+export const applyAtom = (gs: GameState, atom: EffectAtom): GameState => {
+  //for now, it's only type: "Move"
+  return moveCardToZone(gs, atom.id, atom.to)
 }
 
 // --------------- Card Criteria --------------- //
@@ -200,11 +208,4 @@ export const checkSingleCriteria = (gs: GameState, card: CardInstance, criteria:
 
 export const checkCriteria = (gs: GameState, card: CardInstance, criteria: CardCriteria[]): boolean => {
   return A.all(criteria, c => checkSingleCriteria(gs, card, c))
-}
-
-// ------------- Effect Application --------------- //
-
-export const applyAtom = (gs: GameState, atom: EffectAtom): GameState => {
-  //for now, it's only type: "Move"
-  return moveCardToZone(gs, atom.id, atom.to)
 }
