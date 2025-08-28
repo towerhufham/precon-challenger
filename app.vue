@@ -94,8 +94,10 @@
 </template>
 
 <script setup lang="ts">
-  import type { GameState, AbilityContext, Attribute, CardInstance, Ability, Selections, CardCriteria  } from './game';
-  import { initGameState, canUseAbility, applyAbility } from './game';
+  import type { GameState, Attribute, CardInstance, CardCriteria  } from './game';
+  import { initGameState } from './game';
+  import type { AbilityContext, Ability, Selections } from './ability';
+  import { canUseAbility, applyAbility } from './ability';
   import { keldo, agido, havnis, merrli, scheiren, reinoheart } from "./cards";
 
   const decklist = [

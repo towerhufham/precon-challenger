@@ -17,8 +17,9 @@
 </template>
 
 <script setup lang="ts">
-  import type { AbilityContext, CardInstance, CardCriteria } from '~/game';
+  import type { CardInstance, CardCriteria } from '~/game';
   import { checkCriteria, ALL_ZONES } from '~/game';
+  import type { AbilityContext } from '~/ability';
   const props = defineProps<{criteria: CardCriteria[], ctx: AbilityContext}>()
   const model = defineModel<CardInstance|null>()
   const canShowCard = (card: CardInstance) => checkCriteria(props.ctx.gameState, card, props.criteria)
